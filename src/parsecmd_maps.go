@@ -65,8 +65,10 @@ func noxCmdLoad(ctx context.Context, c *console.Console, tokens []string) bool {
 		}
 	}
 	mode := nox_xxx_mapGetTypeMB_4CFFA0(memmap.PtrOff(0x973F18, 2408))
+	// campaign maps are flagged as Solo/Coop; loading one online switches the game to coop mode
+	coopMap := mode.Has(noxflags.GameModeCoopTeam)
 	if noxflags.HasGame(noxflags.GameOnline) {
-		if !noxMapsIgnoreMode && (mode == 0 || mode.Has(noxflags.GameModeCoopTeam)) {
+		if !noxMapsIgnoreMode && mode == 0 {
 			c.Printf(console.ColorRed, "Switching maps to Solo is not allowed")
 			return true
 		}
@@ -74,7 +76,7 @@ func noxCmdLoad(ctx context.Context, c *console.Console, tokens []string) bool {
 			if mode.Has(noxflags.GameModeCTF|noxflags.GameModeFlagBall) && noxServer.Teams.Count() != 2 {
 				legacy.Nox_xxx_wndGuiTeamCreate_4185B0()
 			}
-		} else if !noxMapsIgnoreMode && !noxflags.GetGame().Has(mode) {
+		} else if !noxMapsIgnoreMode && !noxflags.GetGame().Has(mode) && !coopMap {
 			v6 := strMan.GetStringInFile("NoMapLoadNewMode", "parsecmd.c")
 			nox_xxx_printCentered_445490(v6)
 			return true

@@ -923,6 +923,9 @@ func nox_xxx_updatePlayerObserver_4E62F0(a1p *server.Object) {
 			pl.CameraUnlock()
 			if !noxflags.HasGame(noxflags.GameModeQuest) {
 				v22 := s.nox_xxx_mapFindPlayerStart_4F7AB0(pl.PlayerUnit)
+				if noxflags.HasGame(noxflags.GameModeCoop) && noxflags.HasGame(noxflags.GameOnline) {
+					v22 = s.RandomReachablePointAround(80.0, v22)
+				}
 				asObjectS(pl.PlayerUnit).SetPos(v22)
 			}
 			it.Active = false

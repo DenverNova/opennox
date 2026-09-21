@@ -825,18 +825,20 @@ func nox_xxx_gameIsSwitchToSolo_4DB240() bool {
 }
 
 func (s *Server) nox_xxx_gameTick_4D2580_server_D() {
-	pl := s.Players.ByInd(server.HostPlayerIndex)
-	if pl == nil {
-		return
+	online := noxflags.HasGame(noxflags.GameOnline)
+	var u *server.Object
+	if pl := s.Players.ByInd(server.HostPlayerIndex); pl != nil {
+		u = pl.PlayerUnit
 	}
-	u := pl.PlayerUnit
-	if u == nil || sub_4DCC10(u) != 1 {
+	if !online && (u == nil || sub_4DCC10(u) != 1) {
 		return
 	}
 	savedone := false
-	dead := u.Flags().Has(object.FlagDead)
+	dead := u != nil && u.Flags().Has(object.FlagDead)
 	if !dead {
 		s.scriptOnEvent(script.EventMapShutdown)
+	}
+	if !dead && u != nil {
 		noxflags.SetGame(noxflags.GameFlag28)
 		savedone = saveCoopGame(saveName1557900)
 		noxflags.UnsetGame(noxflags.GameFlag28)
@@ -846,7 +848,12 @@ func (s *Server) nox_xxx_gameTick_4D2580_server_D() {
 		}
 	}
 	v28 := sub_4DB1C0()
-	if dead || !savedone {
+	if online {
+		if v28 != nil {
+			v30 := alloc.GoString(*(**byte)(unsafe.Add(v28, 700)))
+			s.SwitchMap(v30)
+		}
+	} else if dead || !savedone {
 		if v28 != nil && !savedone {
 			asObjectS(u).SetPos(legacy.AsPointf(unsafe.Pointer(*(*uintptr)(unsafe.Add(v28, 700)) + 80)))
 		}
@@ -1099,8 +1106,22 @@ func (s *Server) nox_xxx_mapExitAndCheckNext_4D1860_server() error {
 		s.mapSend.ReadMapFile()
 	}
 	s.ObjectsAddPending()
+	coopOnline := noxflags.HasGame(noxflags.GameModeCoop) && noxflags.HasGame(noxflags.GameOnline)
 	for _, k := range s.Players.ListUnits() {
 		legacy.Sub_4EF660(k)
+		if coopOnline {
+			ud := k.UpdateDataPlayer()
+			ud.Field78 = 0
+			ud.Field79 = 0
+			if pl := k.ControllingPlayer(); pl != nil && pl.Field3680&1 != 0 {
+				legacy.Sub_4DF3C0(pl)
+				legacy.Nox_xxx_playerLeaveObserver_0_4E6AA0(pl)
+				pl.CameraUnlock()
+			}
+			if k.Flags().Has(object.FlagDead) {
+				legacy.Nox_xxx_playerRespawn_4F7EF0(k)
+			}
+		}
 		v61 := s.nox_xxx_mapFindPlayerStart_4F7AB0(k)
 		if noxflags.HasGame(noxflags.GameModeChat) && s.Teams.Count() != 0 {
 			if !noxflags.HasGamePlay(2) && !noxflags.HasGame(noxflags.GameFlag16) {
@@ -1108,6 +1129,8 @@ func (s *Server) nox_xxx_mapExitAndCheckNext_4D1860_server() error {
 					v61 = s.RandomReachablePointAround(50.0, legacy.AsPointf(unsafe.Add(t.Field_72, 56)))
 				}
 			}
+		} else if coopOnline {
+			v61 = s.RandomReachablePointAround(80.0, v61)
 		}
 		asObjectS(k).SetPos(v61)
 		if !noxflags.HasGame(noxflags.GameModeCoopTeam) {

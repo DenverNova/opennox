@@ -419,6 +419,9 @@ func (s *Server) newPlayer(ind ntype.PlayerInd, opts *PlayerOpts) int {
 		}
 	} else {
 		start = s.nox_xxx_mapFindPlayerStart_4F7AB0(punit)
+		if noxflags.HasGame(noxflags.GameModeCoop) && noxflags.HasGame(noxflags.GameOnline) {
+			start = s.RandomReachablePointAround(80.0, start)
+		}
 	}
 	asObjectS(punit).SetPos(start)
 	pl.Sub422140()

@@ -13,6 +13,7 @@ import (
 	"github.com/noxworld-dev/opennox-lib/types"
 
 	"github.com/noxworld-dev/opennox/v1/client/noxrender"
+	noxflags "github.com/noxworld-dev/opennox/v1/common/flags"
 	"github.com/noxworld-dev/opennox/v1/common/memmap"
 	"github.com/noxworld-dev/opennox/v1/internal/binfile"
 	"github.com/noxworld-dev/opennox/v1/legacy"
@@ -121,6 +122,10 @@ func noxScriptStartupScreen(v int) {
 }
 
 func sub5165D0(which int) {
+	// death screens are skipped in online coop games: dead players respawn instead
+	if *memmap.PtrUint32(0x5D4594, 2386832) == 0 && noxflags.HasGame(noxflags.GameModeCoop) && noxflags.HasGame(noxflags.GameOnline) {
+		return
+	}
 	*memmap.PtrUint32(0x5D4594, 2386828) = uint32(which - 1)
 	sub_413A00(1)
 	noxClient.r.FadeInScreen(25, true, func() {

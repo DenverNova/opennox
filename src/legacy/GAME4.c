@@ -1459,6 +1459,17 @@ short nox_xxx_playerRespawn_4F7EF0(nox_object_t* a1p) {
 				sub_4F80C0(v6, &v9);
 			} else {
 				nox_xxx_mapFindPlayerStart_4F7AB0(&v9, a1);
+				if (nox_common_gameFlags_check_40A5C0(2048) && nox_common_gameFlags_check_40A5C0(0x2000)) {
+					float2 spread;
+					int tries = 32;
+					do {
+						sub_4ED970(80.0, &v9, &spread);
+						if (nox_xxx_mapTileAllowTeleport_411A90(&spread)) {
+							v9 = spread;
+							break;
+						}
+					} while (--tries);
+				}
 			}
 			nox_xxx_unitMove_4E7010(a1, &v9);
 			if (nox_common_gameFlags_check_40A5C0(16)) {

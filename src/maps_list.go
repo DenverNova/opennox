@@ -1,8 +1,6 @@
 package opennox
 
 import (
-	"os"
-
 	"github.com/noxworld-dev/opennox-lib/datapath"
 	"github.com/noxworld-dev/opennox-lib/ifs"
 	"github.com/noxworld-dev/opennox-lib/maps"
@@ -12,11 +10,9 @@ import (
 	"github.com/noxworld-dev/opennox/v1/legacy/common/alloc"
 )
 
-var soloAllowMP = os.Getenv("NOX_SOLO_MP") == "true"
-
 func scanMaps() (maps.MapList, error) {
 	return maps.Scan(datapath.Data(maps.Dir), &maps.ScanOptions{
-		Solo: soloAllowMP,
+		Solo: true,
 	})
 }
 

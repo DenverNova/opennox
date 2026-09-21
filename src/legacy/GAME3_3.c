@@ -3656,6 +3656,36 @@ int sub_4E9010() {
 	return 0;
 }
 
+//----- (004E9080) --------------------------------------------------------
+int nox_xxx_coopAllPlayersAtExit_4E9080() {
+	int unit;
+	int upd;
+	int plr;
+	int arrived = 0;
+
+	for (unit = nox_xxx_getFirstPlayerUnit_4DA7C0(); unit; unit = nox_xxx_getNextPlayerUnit_4DA7F0(unit)) {
+		upd = *(uint32_t*)(unit + 748);
+		plr = *(uint32_t*)(upd + 276);
+		if (nox_common_gameFlags_check_40A5C0(1) &&
+			nox_common_getEngineFlag(NOX_ENGINE_FLAG_DISABLE_GRAPHICS_RENDERING) &&
+			*(uint8_t*)(plr + 2064) == 31) {
+			continue;
+		}
+		if (*(uint32_t*)(upd + 312) || *(uint32_t*)(upd + 316)) {
+			++arrived;
+			continue;
+		}
+		if (*(uint32_t*)(unit + 16) & 0x8000) {
+			continue;
+		}
+		if (*(uint32_t*)(plr + 3680) & 1) {
+			continue;
+		}
+		return 0;
+	}
+	return arrived != 0;
+}
+
 //----- (004E9090) --------------------------------------------------------
 void sub_4DCBF0(int a1);
 void nox_xxx_collideExit_4E9090(int a1, int a2, int a3) {
@@ -3722,6 +3752,26 @@ void nox_xxx_collideExit_4E9090(int a1, int a2, int a3) {
 	sub_4DCBF0(1);
 	if (nox_common_gameFlags_check_40A5C0(2048)) {
 		nox_setSaveFileName_4DB130("WORKING");
+		if (nox_common_gameFlags_check_40A5C0(0x2000)) {
+			if (*(uint32_t*)(v5 + 312) != 0 || *(uint32_t*)(v5 + 316) != 0) {
+				return;
+			}
+			for (int abil = 1; abil < 6; ++abil) {
+				if (nox_common_playerIsAbilityActive_4FC250(v4, abil)) {
+					sub_4FC300((uint32_t*)v4, abil);
+				}
+			}
+			*(uint32_t*)(v5 + 312) = a1;
+			*(uint32_t*)(v5 + 316) = 0;
+			nox_xxx_playerSetState_4FA020((uint32_t*)v4, 13);
+			nox_xxx_playerGoObserver_4E6860(*(uint32_t*)(v5 + 276), 0, 0);
+			nox_xxx_netInformTextMsg2_4DA180(18, (uint8_t*)(v4 + 36));
+			nox_xxx_netPriMsgToPlayer_4DA2C0(v4, "objcoll.c:PlayerEntersWarp", 0);
+			nox_xxx_aud_501960(1003, a1, 0, 0);
+			if (!nox_xxx_coopAllPlayersAtExit_4E9080()) {
+				return;
+			}
+		}
 		sub_4DB170(1, a1, 0);
 		return;
 	}

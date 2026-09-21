@@ -4972,7 +4972,7 @@ int nox_xxx_diePlayer_54D2B0(int a1) {
 	if (!*getMemU32Ptr(0x5D4594, 2491688)) {
 		*getMemU32Ptr(0x5D4594, 2491688) = nox_xxx_getNameId_4E3AA0("AnkhTradable");
 	}
-	if (nox_common_gameFlags_check_40A5C0(2048)) {
+	if (nox_common_gameFlags_check_40A5C0(2048) && !nox_common_gameFlags_check_40A5C0(0x2000)) {
 		sub_4DB170(0, 0, 0);
 	}
 	v24 = *(uint32_t*)(a1 + 520);
