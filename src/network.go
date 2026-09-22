@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"image"
+	"image/color"
 	"net/netip"
 	"strings"
 	"time"
@@ -916,6 +917,22 @@ func (c *Client) nox_xxx_netOnPacketRecvCli48EA70_switch(ind ntype.PlayerInd, op
 			}
 		}
 		return 3
+	case noxnetOpCoopCinema:
+		if len(data) < 2 {
+			return -1
+		}
+		if nox_client_isConnected() && !noxflags.HasEngine(noxflags.EngineNoRendering) {
+			if data[1] == 1 {
+				if c.r.FadeInCinema(0.16, 10, color.Black) {
+					sub_477530(true)
+				}
+			} else {
+				if c.r.FadeOutCinema(0.16, 30, color.Black) {
+					sub_477530(false)
+				}
+			}
+		}
+		return 2
 	case noxnet.MSG_DIALOG:
 		if len(data) < 2 {
 			return -1

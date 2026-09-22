@@ -64,7 +64,7 @@ func (s *Server) OnPacketOpSub(pli ntype.PlayerInd, op noxnet.Op, data []byte, p
 func (s *Server) netOnPlayerInput(pl *Player, data []byte) int {
 	sz := int(data[0])
 	data = data[1 : 1+sz]
-	if pl.Field3680&0x10 == 0 {
+	if pl.Field3680&0x10 == 0 || s.CinemaLock {
 		return 1 + sz
 	}
 	buf := netDecodePlayerInput(data, nil)

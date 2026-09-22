@@ -104,10 +104,19 @@ func nox_xxx_monsterCreateFn_54C480(u *server.Object) {
 	if def != nil {
 		h := u.HealthData
 		u.Experience = float32(def.Experience64)
-		h.Cur = uint16(def.Health68)
-		h.Field2 = uint16(def.Health68)
-		h.Max = uint16(def.Health68)
-		speed := float64(def.Speed76) / 32
+		hp := def.Health68
+		speedMult := 1.0
+		if noxCoopOnline() && !u.SubClass().AsMonster().HasAny(object.MonsterNPC|object.MonsterFemaleNPC|object.MonsterShopkeeper) {
+			hp = uint32(float64(def.Health68) * noxCoopScaleMult(coopEnemyHealth, coopEnemyHealthPerPlayer))
+			if hp > math.MaxUint16 {
+				hp = math.MaxUint16
+			}
+			speedMult = noxCoopScaleMult(coopEnemySpeed, coopEnemySpeedPerPlayer)
+		}
+		h.Cur = uint16(hp)
+		h.Field2 = uint16(hp)
+		h.Max = uint16(hp)
+		speed := float64(def.Speed76) / 32 * speedMult
 		u.SpeedBase = float32(speed)
 		u.SpeedCur = float32(speed)
 		ud.RetreatLevel = def.RetreatRatio80

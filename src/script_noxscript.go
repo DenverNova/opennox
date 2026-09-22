@@ -137,13 +137,16 @@ func (s *Server) CinemaPlayers(enable bool) {
 	if nox_script_objTelekinesisHand == 0 {
 		nox_script_objTelekinesisHand = s.Types.IndByID("TelekinesisHand")
 	}
+	if noxCoopOnline() {
+		s.coopCinemaSync(enable)
+	}
 	const (
 		perc       = 0.16
 		fadeOutDur = 30
 		fadeInDur  = 10
 	)
 	if !enable {
-		if noxClient.r.FadeOutCinema(perc, fadeOutDur, color.Black) {
+		if noxClient != nil && noxClient.r.FadeOutCinema(perc, fadeOutDur, color.Black) {
 			sub_477530(false)
 		}
 		for it := s.Objs.First(); it != nil; it = it.Next() {
@@ -155,8 +158,8 @@ func (s *Server) CinemaPlayers(enable bool) {
 		}
 		return
 	}
-	inFade := noxClient.r.CheckFade(noxrender.FadeInCinemaKey)
-	if noxClient.r.FadeInCinema(perc, fadeInDur, color.Black) {
+	inFade := noxClient != nil && noxClient.r.CheckFade(noxrender.FadeInCinemaKey)
+	if noxClient != nil && noxClient.r.FadeInCinema(perc, fadeInDur, color.Black) {
 		sub_477530(true)
 	}
 	if inFade {
@@ -210,6 +213,41 @@ func (s *Server) CinemaPlayers(enable bool) {
 			s.Spells.Dur.CancelFor(spell.SPELL_SUMMON_BAT, it)
 		}
 	}
+}
+
+// coopCinemaSync gathers the party for a scripted cutscene in online coop:
+// everyone is teleported to the player who triggered it, remote clients are
+// told to show the cinema letterbox, and player input is frozen until the
+// cutscene ends.
+func (s *Server) coopCinemaSync(enable bool) {
+	s.Server.CinemaLock = enable
+	if enable {
+		var anchor *server.Object
+		for _, cand := range []*server.Object{s.Server.NoxScriptVM.Caller(), s.Server.NoxScriptVM.Trigger()} {
+			if cand != nil && !cand.Flags().Has(object.FlagDestroyed) && cand.Class().Has(object.ClassPlayer) {
+				anchor = cand
+				break
+			}
+		}
+		if anchor == nil {
+			anchor = s.Players.FirstUnit()
+		}
+		if anchor != nil {
+			for _, u := range s.Players.ListUnits() {
+				if u == anchor || u.Flags().Has(object.FlagDead) {
+					continue
+				}
+				pos := s.RandomReachablePointAround(60.0, anchor.Pos())
+				asObjectS(u).SetPos(pos)
+			}
+		}
+	}
+	var buf [2]byte
+	buf[0] = byte(noxnetOpCoopCinema)
+	if enable {
+		buf[1] = 1
+	}
+	s.NetSendPacketXxx(255, buf[:], 0, 0, 0)
 }
 
 func (s *Server) nox_setImaginaryCaster() int {

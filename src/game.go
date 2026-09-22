@@ -19,6 +19,7 @@ import (
 	"github.com/noxworld-dev/opennox-lib/env"
 	"github.com/noxworld-dev/opennox-lib/ifs"
 	"github.com/noxworld-dev/opennox-lib/log"
+	"github.com/noxworld-dev/opennox-lib/noxnet"
 	"github.com/noxworld-dev/opennox-lib/object"
 	"github.com/noxworld-dev/opennox-lib/script"
 	"github.com/noxworld-dev/opennox-lib/types"
@@ -49,11 +50,23 @@ var (
 	gameIsNotMultiplayer      bool
 	gameIsSwitchToSolo        bool
 	defaultChatMap            string
+	coopEnemyHealth           float64
+	coopEnemyHealthPerPlayer  float64
+	coopEnemyDamage           float64
+	coopEnemyDamagePerPlayer  float64
+	coopEnemySpeed            float64
+	coopEnemySpeedPerPlayer   float64
 )
 
 func init() {
 	configBoolPtr("network.xwis.register", "NOX_XWIS", true, &useXWIS)
 	configStrPtr("server.maps.default_chat", "NOX_CHAT_MAP", "so_lod", &defaultChatMap)
+	configFloatPtr("game.coop.enemy_health", "", 1.0, &coopEnemyHealth)
+	configFloatPtr("game.coop.enemy_health_per_player", "", 1.0, &coopEnemyHealthPerPlayer)
+	configFloatPtr("game.coop.enemy_damage", "", 1.0, &coopEnemyDamage)
+	configFloatPtr("game.coop.enemy_damage_per_player", "", 0.5, &coopEnemyDamagePerPlayer)
+	configFloatPtr("game.coop.enemy_speed", "", 1.0, &coopEnemySpeed)
+	configFloatPtr("game.coop.enemy_speed_per_player", "", 0.0, &coopEnemySpeedPerPlayer)
 	gui.RegisterState(client.StateMovies, "Movies", nox_game_rollLogoAndStart_4AB1F0)
 	gui.RegisterState(client.StateMainMenu, "MainMenu", nox_game_showMainMenu4A1C00)
 	gui.RegisterState(client.StateCharSelect, "CharSelect", func() bool {
@@ -325,6 +338,51 @@ func (s *Server) nox_xxx_setQuest_4D6F60(v int) {
 
 func sub_4D6F90(a1 uint32) {
 	*memmap.PtrUint32(0x5D4594, 1556104) = a1
+}
+
+// noxnetOpCoopCinema is an OpenNox extension opcode (242-255 are unused by the
+// original protocol) that tells remote clients a scripted cutscene started or
+// ended during an online coop game.
+const noxnetOpCoopCinema = noxnet.Op(242)
+
+// noxCoopOnline reports whether the current game is an online cooperative
+// session (campaign played over multiplayer).
+func noxCoopOnline() bool {
+	return noxflags.HasGame(noxflags.GameModeCoop) && noxflags.HasGame(noxflags.GameOnline)
+}
+
+// noxCoopPlayerCount returns the number of active players on the server.
+func noxCoopPlayerCount() int {
+	if n := len(noxServer.Players.List()); n > 0 {
+		return n
+	}
+	return 1
+}
+
+// noxCoopScaleMult computes base + perPlayer*(players-1).
+func noxCoopScaleMult(base, perPlayer float64) float64 {
+	return base + perPlayer*float64(noxCoopPlayerCount()-1)
+}
+
+// noxCoopScaleDamage scales damage dealt by monsters to player-owned units
+// (players and their summons/pets) by the configured per-player multiplier.
+func noxCoopScaleDamage(victim, attacker *server.Object, dmg int) int {
+	if dmg <= 0 || victim == nil || attacker == nil || !noxCoopOnline() {
+		return dmg
+	}
+	vroot := victim.FindOwnerChainPlayer()
+	aroot := attacker.FindOwnerChainPlayer()
+	if vroot == nil || aroot == nil {
+		return dmg
+	}
+	if !vroot.Class().Has(object.ClassPlayer) || !aroot.Class().Has(object.ClassMonster) {
+		return dmg
+	}
+	mult := noxCoopScaleMult(coopEnemyDamage, coopEnemyDamagePerPlayer)
+	if mult <= 0 {
+		return 0
+	}
+	return int(float64(dmg)*mult + 0.5)
 }
 
 type srvReg struct {
@@ -1109,6 +1167,9 @@ func (s *Server) nox_xxx_mapExitAndCheckNext_4D1860_server() error {
 	}
 	s.ObjectsAddPending()
 	coopOnline := noxflags.HasGame(noxflags.GameModeCoop) && noxflags.HasGame(noxflags.GameOnline)
+	if coopOnline {
+		s.Server.CinemaLock = false
+	}
 	for _, k := range s.Players.ListUnits() {
 		legacy.Sub_4EF660(k)
 		if coopOnline {

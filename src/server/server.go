@@ -91,6 +91,8 @@ type Server struct {
 	ShouldCallMapInit  bool
 	ShouldCallMapEntry bool
 
+	CinemaLock bool // swallow player input while a coop cutscene plays
+
 	NetList *netlist.List
 	port    int
 	http    httpService

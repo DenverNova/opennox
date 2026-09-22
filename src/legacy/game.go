@@ -92,6 +92,10 @@ var (
 	Nox_xxx_playerSendMOTD_4DD140       func(a1 ntype.PlayerInd)
 	Nox_client_getChatMap_49FF40        func() string
 	Nox_xxx_mapSwitchLevel_4D12E0       func(a1 bool)
+	Nox_coopScaleDamage                 func(victim, attacker *server.Object, dmg int) int
+	Nox_coopLootClaimable               func(pl, item *server.Object) int
+	Nox_coopLootClone                   func(item *server.Object) *server.Object
+	Nox_coopLootClaimed                 func(pl, item *server.Object)
 )
 
 func init() {
@@ -115,6 +119,37 @@ func init() {
 //export nox_xxx_gameGetPlayState_4356B0
 func nox_xxx_gameGetPlayState_4356B0() int {
 	return GameGetPlayState()
+}
+
+//export nox_coopScaleDamage
+func nox_coopScaleDamage(victim, attacker *nox_object_t, dmg C.int) C.int {
+	if Nox_coopScaleDamage == nil {
+		return dmg
+	}
+	return C.int(Nox_coopScaleDamage(asObjectS(victim), asObjectS(attacker), int(dmg)))
+}
+
+//export nox_coopLootClaimable
+func nox_coopLootClaimable(pl, item *nox_object_t) C.int {
+	if Nox_coopLootClaimable == nil {
+		return 0
+	}
+	return C.int(Nox_coopLootClaimable(asObjectS(pl), asObjectS(item)))
+}
+
+//export nox_coopLootClone
+func nox_coopLootClone(item *nox_object_t) *nox_object_t {
+	if Nox_coopLootClone == nil {
+		return nil
+	}
+	return asObjectC(Nox_coopLootClone(asObjectS(item)))
+}
+
+//export nox_coopLootClaimed
+func nox_coopLootClaimed(pl, item *nox_object_t) {
+	if Nox_coopLootClaimed != nil {
+		Nox_coopLootClaimed(asObjectS(pl), asObjectS(item))
+	}
 }
 
 //export nox_xxx_GetEndgameDialog_578D80

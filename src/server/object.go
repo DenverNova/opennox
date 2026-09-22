@@ -549,6 +549,8 @@ type ObjectExt struct {
 	HealthRegenToMax    time.Duration
 	HealthRegenPerFrame float32
 	HealthFraction      float32 // float fraction of health; 0 <= v < 1
+
+	LootClaimedBy uint32 // bitmask of player indices that already looted this object (online coop)
 }
 
 func (obj *ObjectExt) defaults() {

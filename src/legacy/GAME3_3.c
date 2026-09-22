@@ -3595,6 +3595,9 @@ int sub_4E8E60() {
 
 //----- (004E8F60) --------------------------------------------------------
 bool nox_server_questAllowDefault();
+int nox_coopLootClaimable(nox_object_t* pl, nox_object_t* item);
+nox_object_t* nox_coopLootClone(nox_object_t* item);
+void nox_coopLootClaimed(nox_object_t* pl, nox_object_t* item);
 bool nox_server_questMaybeWarp_4E8F60() {
 	unsigned int curLvl = nox_game_getQuestStage_4E3CC0();
 	unsigned int toLvl = nox_server_questNextStageThreshold_4D74F0(curLvl);
@@ -10905,10 +10908,35 @@ int nox_xxx_inventoryServPlace_4F36F0(nox_object_t* a1p, nox_object_t* a2p, int 
 		return 0;
 	}
 	v5 = *(int (**)(int, int, int, int))(a2 + 708);
-	if (v5) {
-		v6 = v5(a1, a2, a3, a4);
-	} else {
-		v6 = nox_xxx_pickupDefault_4F31E0(a1, a2, a3);
+	{
+		int coopMode = 0;
+		nox_object_t* loot = (nox_object_t*)a2;
+		if (nox_common_gameFlags_check_40A5C0(2048) && nox_common_gameFlags_check_40A5C0(8192) &&
+			(*(uint8_t*)(a1 + 8) & 4)) {
+			coopMode = nox_coopLootClaimable((nox_object_t*)a1, (nox_object_t*)a2);
+			if (coopMode == 2) {
+				return 0;
+			}
+			if (coopMode == 1) {
+				loot = nox_coopLootClone((nox_object_t*)a2);
+			}
+		}
+		if (!loot) {
+			v6 = 0;
+		} else {
+			if (v5) {
+				v6 = v5(a1, (int)loot, a3, a4);
+			} else {
+				v6 = nox_xxx_pickupDefault_4F31E0(a1, (int)loot, a3);
+			}
+			if ((int)loot != a2) {
+				if (v6) {
+					nox_coopLootClaimed((nox_object_t*)a1, (nox_object_t*)a2);
+				} else {
+					nox_xxx_delayedDeleteObject_4E5CC0(loot);
+				}
+			}
+		}
 	}
 	v7 = v6;
 	if (v6) {

@@ -352,7 +352,17 @@ int nox_script_GiveExp_516190() {
 	v1 = nox_script_pop();
 	v2 = nox_server_scriptValToObjectPtr_511B60(v1);
 	if (v2) {
-		nox_xxx_plyrGiveExp_4EF3A0_exp_level(v2, *(float*)&v0);
+		if (nox_common_gameFlags_check_40A5C0(2048) && nox_common_gameFlags_check_40A5C0(8192) &&
+			*(uint8_t*)(v2 + 8) & 4) {
+			// Online coop: scripted XP goes to the whole party so no one
+			// is left behind on campaign progression.
+			int pl;
+			for (pl = nox_xxx_getFirstPlayerUnit_4DA7C0(); pl; pl = nox_xxx_getNextPlayerUnit_4DA7F0(pl)) {
+				nox_xxx_plyrGiveExp_4EF3A0_exp_level(pl, *(float*)&v0);
+			}
+		} else {
+			nox_xxx_plyrGiveExp_4EF3A0_exp_level(v2, *(float*)&v0);
+		}
 	}
 	return 0;
 }

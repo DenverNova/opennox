@@ -102,6 +102,17 @@ func configBoolPtr(key, env string, def bool, ptr *bool) {
 	})
 }
 
+func configFloatPtr(key, env string, def float64, ptr *float64) {
+	viper.SetDefault(key, def)
+	if env != "" {
+		viper.BindEnv(key, env)
+	}
+	*ptr = viper.GetFloat64(key)
+	registerOnConfigRead(func() {
+		*ptr = viper.GetFloat64(key)
+	})
+}
+
 func configHiddenBoolPtr(key, env string, ptr *bool) {
 	if env != "" {
 		viper.BindEnv(key, env)

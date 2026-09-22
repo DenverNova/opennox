@@ -1,6 +1,8 @@
 package opennox
 
 import (
+	"unsafe"
+
 	"github.com/noxworld-dev/opennox-lib/object"
 	"github.com/noxworld-dev/opennox-lib/player"
 	"github.com/noxworld-dev/opennox-lib/spell"
@@ -26,6 +28,76 @@ func nox_xxx_inventoryCountObjects_4E7D30(a1 *server.Object, a2 int32) int {
 		}
 	}
 	return cnt
+}
+
+// noxCoopLootClaimable reports how an online-coop pickup should be handled:
+// 0 - shared pickup (vanilla behavior), 1 - instanced (clone for this player),
+// 2 - this player already claimed the item.
+func noxCoopLootClaimable(pl, item *server.Object) int {
+	if !noxCoopOnline() || pl == nil || item == nil {
+		return 0
+	}
+	if !pl.Class().Has(object.ClassPlayer) {
+		return 0
+	}
+	if !item.Flags().Has(object.FlagActive) || item.InvHolder != nil {
+		return 0
+	}
+	ud := pl.UpdateDataPlayer()
+	if ud == nil || ud.Player == nil {
+		return 0
+	}
+	ext := item.GetExt()
+	if ext == nil {
+		return 1
+	}
+	bit := uint32(1) << uint32(ud.Player.PlayerIndex())
+	if ext.LootClaimedBy&bit != 0 {
+		return 2
+	}
+	return 1
+}
+
+// noxCoopLootClaimed marks the world item as looted by the given player.
+func noxCoopLootClaimed(pl, item *server.Object) {
+	if pl == nil || item == nil {
+		return
+	}
+	ud := pl.UpdateDataPlayer()
+	if ud == nil || ud.Player == nil {
+		return
+	}
+	ext := item.SetExt()
+	if ext == nil {
+		return
+	}
+	ext.LootClaimedBy |= uint32(1) << uint32(ud.Player.PlayerIndex())
+}
+
+// noxCoopLootClone creates an unlinked copy of a world item to place into
+// a player's inventory while leaving the original in the world for others.
+func noxCoopLootClone(item *server.Object) *server.Object {
+	s := noxServer
+	typ := s.Types.ByInd(int(item.TypeInd))
+	if typ == nil {
+		return nil
+	}
+	obj := s.Objs.NewObject(typ)
+	if obj == nil {
+		return nil
+	}
+	copyData := func(dst, src unsafe.Pointer, sz uintptr) {
+		if dst != nil && src != nil && sz != 0 {
+			copy(unsafe.Slice((*byte)(dst), sz), unsafe.Slice((*byte)(src), sz))
+		}
+	}
+	copyData(obj.InitData, item.InitData, typ.InitDataSize)
+	copyData(obj.UseData, item.UseData, typ.UseDataSize)
+	copyData(obj.UpdateData, item.UpdateData, typ.UpdateDataSize)
+	copyData(obj.CollideData, item.CollideData, typ.CollideDataSize)
+	obj.TeamVal = item.TeamVal
+	obj.Field32 = item.Field32
+	return obj
 }
 
 func nox_xxx_pickupDefault_4F31E0(obj *server.Object, item *server.Object, a3 int) int {

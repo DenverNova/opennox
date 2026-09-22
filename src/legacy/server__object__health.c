@@ -69,6 +69,19 @@ void nox_xxx_soloMonsterKillReward_4EE500_obj_health(int a1) {
 		}
 		v1 = a1;
 	}
+	if (nox_common_gameFlags_check_40A5C0(8192)) {
+		// Online coop: hand the kill XP to every player so the whole party
+		// progresses at the same rate as a solo character would.
+		int pl;
+		for (pl = nox_xxx_getFirstPlayerUnit_4DA7C0(); pl; pl = nox_xxx_getNextPlayerUnit_4DA7F0(pl)) {
+			double g = nox_xxx_unitGiveXP_4EF270(pl, *(float*)(v1 + 28));
+			if (g > 0.0) {
+				wchar2_t* m = nox_strman_loadString_40F1D0("gainpoints", 0, "C:\\NoxPost\\src\\Server\\Object\\health.c", 172);
+				nox_xxx_netSendLineMessage_4D9EB0(pl, m, (unsigned int)(long long)g);
+			}
+		}
+		return;
+	}
 	v6 = nox_xxx_unitGiveXP_4EF270(v4, *(float*)(v1 + 28));
 	if (v6 > 0.0) {
 		v7 = nox_strman_loadString_40F1D0("gainpoints", 0, "C:\\NoxPost\\src\\Server\\Object\\health.c", 172);

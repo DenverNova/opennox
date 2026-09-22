@@ -78,6 +78,8 @@ extern uint32_t dword_5d4594_1550916;
 extern uint32_t dword_5d4594_2649712;
 extern uint32_t dword_5d4594_3835396;
 extern uint32_t dword_5d4594_1523024;
+
+int nox_coopScaleDamage(nox_object_t* victim, nox_object_t* attacker, int dmg);
 extern uint32_t dword_5d4594_1523028;
 extern uint32_t dword_5d4594_1548476;
 
@@ -7184,6 +7186,7 @@ int nox_xxx_damageDefaultProc_4E0B30(int a1, int a2, int a3, int a4, int a5) {
 		return 1;
 	}
 	v10 = a2;
+	a4 = nox_coopScaleDamage((nox_object_t*)a1, (nox_object_t*)a2, a4);
 	if (!nox_xxx_CheckGameplayFlags_417DA0(1)) {
 		v11 = nox_xxx_findParentChainPlayer_4EC580(a2);
 		v12 = v11;

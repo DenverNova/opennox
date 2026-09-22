@@ -99,6 +99,10 @@ func init() {
 	legacy.Sub_4AA9C0 = sub_4AA9C0
 	legacy.Nox_server_questAllowDefault = nox_server_questAllowDefault
 	legacy.Nox_server_questNextStageThreshold_4D74F0 = nox_server_questNextStageThreshold_4D74F0
+	legacy.Nox_coopScaleDamage = noxCoopScaleDamage
+	legacy.Nox_coopLootClaimable = noxCoopLootClaimable
+	legacy.Nox_coopLootClone = noxCoopLootClone
+	legacy.Nox_coopLootClaimed = noxCoopLootClaimed
 	legacy.Sub_4D6F30 = sub_4D6F30
 	legacy.GetNetPlayerBufSize = getNetPlayerBufSize
 	legacy.Nox_netlist_addToMsgListSrv = nox_netlist_addToMsgListSrv
