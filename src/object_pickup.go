@@ -58,7 +58,8 @@ func noxCoopLootClaimable(pl, item *server.Object) int {
 	return 1
 }
 
-// noxCoopLootClaimed marks the world item as looted by the given player.
+// noxCoopLootClaimed marks the world item as looted by the given player, hides
+// it on their client, and removes it from the world once everyone has a copy.
 func noxCoopLootClaimed(pl, item *server.Object) {
 	if pl == nil || item == nil {
 		return
@@ -71,7 +72,17 @@ func noxCoopLootClaimed(pl, item *server.Object) {
 	if ext == nil {
 		return
 	}
-	ext.LootClaimedBy |= uint32(1) << uint32(ud.Player.PlayerIndex())
+	bit := uint32(1) << uint32(ud.Player.PlayerIndex())
+	ext.LootClaimedBy |= bit
+	item.Field37 &^= bit
+	item.Field38 |= bit
+	noxServer.Nox_xxx_netObjectOutOfSight_528A60(int(ud.Player.PlayerIndex()), item)
+	for _, p := range noxServer.Players.List() {
+		if p.IsActive() && ext.LootClaimedBy&(uint32(1)<<p.Index()) == 0 {
+			return
+		}
+	}
+	noxServer.DelayedDelete(item)
 }
 
 // noxCoopLootClone creates an unlinked copy of a world item to place into

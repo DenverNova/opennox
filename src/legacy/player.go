@@ -317,6 +317,10 @@ func Nox_xxx_plrReadVals_4EEDC0(obj *server.Object, a2 int) {
 	C.nox_xxx_plrReadVals_4EEDC0(asObjectC(obj), C.int(a2))
 }
 
+func Nox_xxx_abilGivePlayerAll_4EED40(obj *server.Object, lvl int, a3 int) {
+	C.nox_xxx_abilGivePlayerAll_4EED40(C.int(uintptr(unsafe.Pointer(asObjectC(obj)))), C.char(lvl), C.int(a3))
+}
+
 func Nox_xxx_playerManaAdd_4EEB80(obj *server.Object, v int) {
 	C.nox_xxx_playerManaAdd_4EEB80(asObjectC(obj), C.short(v))
 }

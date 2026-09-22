@@ -8,6 +8,8 @@ import (
 	"math"
 	"unsafe"
 
+	"github.com/noxworld-dev/opennox-lib/datapath"
+	"github.com/noxworld-dev/opennox-lib/ifs"
 	"github.com/noxworld-dev/opennox-lib/noxnet"
 	"github.com/noxworld-dev/opennox-lib/object"
 	"github.com/noxworld-dev/opennox-lib/player"
@@ -87,6 +89,11 @@ func (s *Server) PlayerCinema(p *Player, v bool) {
 func (s *Server) PlayerDisconnect(p *server.Player, v int) {
 	if !p.IsActive() {
 		return
+	}
+	if noxCoopOnline() && p.PlayerUnit != nil {
+		if err := ifs.MkdirAll(datapath.Save("coop")); err == nil {
+			savePlayerData(coopProfilePath(p.Name()), p.PlayerIndex())
+		}
 	}
 	nox_xxx_playerDisconnFinish_4DE530(p.PlayerIndex(), int8(v))
 	legacy.Nox_xxx_playerForceDisconnect_4DE7C0(p.PlayerIndex())
@@ -424,6 +431,9 @@ func (s *Server) newPlayer(ind ntype.PlayerInd, opts *PlayerOpts) int {
 		}
 	}
 	asObjectS(punit).SetPos(start)
+	if noxflags.HasGame(noxflags.GameModeCoop) && noxflags.HasGame(noxflags.GameOnline) {
+		s.coopApplyProfile(pl)
+	}
 	pl.Sub422140()
 	if ind != server.HostPlayerIndex {
 		if sub_459D70() == 2 {

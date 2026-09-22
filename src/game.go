@@ -895,6 +895,7 @@ func (s *Server) nox_xxx_gameTick_4D2580_server_D() {
 	if online {
 		if v28 != nil {
 			s.scriptOnEvent(script.EventMapShutdown)
+			s.coopSaveAllPlayers()
 			v30 := alloc.GoString(*(**byte)(unsafe.Add(v28, 700)))
 			s.SwitchMap(v30)
 		}
@@ -1183,6 +1184,9 @@ func (s *Server) nox_xxx_mapExitAndCheckNext_4D1860_server() error {
 			}
 			if k.Flags().Has(object.FlagDead) {
 				legacy.Nox_xxx_playerRespawn_4F7EF0(k)
+			}
+			if pl := k.ControllingPlayer(); pl != nil {
+				s.coopApplyProfile(pl)
 			}
 		}
 		v61 := s.nox_xxx_mapFindPlayerStart_4F7AB0(k)

@@ -16,6 +16,7 @@ import (
 	"github.com/noxworld-dev/opennox-lib/env"
 	"github.com/noxworld-dev/opennox-lib/ifs"
 	"github.com/noxworld-dev/opennox-lib/object"
+	"github.com/noxworld-dev/opennox-lib/player"
 	"github.com/noxworld-dev/opennox-lib/types"
 
 	noxflags "github.com/noxworld-dev/opennox/v1/common/flags"
@@ -612,6 +613,73 @@ func nox_xxx_computeServerPlayerDataBufferSize_41CC50(path string) int64 {
 		f.FileSeek(ssz, io.SeekCurrent)
 	}
 	return sz
+}
+
+// coopProfilePath returns the save path for a character's coop progress file.
+func coopProfilePath(charName string) string {
+	name := strings.Map(func(r rune) rune {
+		switch {
+		case r == '/' || r == '\\' || r == ':' || r == 0:
+			return '_'
+		}
+		return r
+	}, charName)
+	if name == "" {
+		name = "_"
+	}
+	return datapath.Save("coop", name+".plr")
+}
+
+// coopSaveAllPlayers writes every active player's character state (XP, stats,
+// spells, inventory) to per-character coop profiles in the saves dir.
+func (s *Server) coopSaveAllPlayers() {
+	if !noxCoopOnline() {
+		return
+	}
+	if err := ifs.MkdirAll(datapath.Save("coop")); err != nil {
+		saveLog.Printf("cannot create coop saves dir: %v", err)
+		return
+	}
+	for _, pl := range s.Players.List() {
+		if !pl.IsActive() || pl.PlayerUnit == nil {
+			continue
+		}
+		path := coopProfilePath(pl.Name())
+		if !savePlayerData(path, pl.PlayerIndex()) {
+			saveLog.Printf("cannot save coop profile for %q", pl.Name())
+		}
+	}
+}
+
+// coopApplyProfile restores a player's saved coop state if a profile for their
+// character exists. New players without a profile get the lobby-granted PvP
+// kit stripped once per session and are left with only what their level earns.
+func (s *Server) coopApplyProfile(pl *server.Player) {
+	if pl == nil || pl.PlayerUnit == nil || !noxCoopOnline() {
+		return
+	}
+	if s.coopProfileSeen == nil {
+		s.coopProfileSeen = make(map[ntype.PlayerInd]bool)
+	}
+	ind := pl.PlayerIndex()
+	path := coopProfilePath(pl.Name())
+	if _, err := ifs.Stat(path); err == nil {
+		if legacy.Nox_xxx_cliPlrInfoLoadFromFile_41A2E0(path, ind) == 0 {
+			saveLog.Printf("cannot load coop profile for %q", pl.Name())
+		}
+		s.coopProfileSeen[ind] = true
+		return
+	}
+	if s.coopProfileSeen[ind] {
+		return
+	}
+	s.coopProfileSeen[ind] = true
+	serverSetAllBeastScrolls(pl, false)
+	serverSetAllSpells(pl, false, 0)
+	serverSetAllWarriorAbilities(pl, false, 0)
+	if pl.PlayerClass() == player.Warrior {
+		legacy.Nox_xxx_abilGivePlayerAll_4EED40(pl.PlayerUnit, int(pl.Level), 0)
+	}
 }
 
 func savePlayerData(path string, ind ntype.PlayerInd) bool {
