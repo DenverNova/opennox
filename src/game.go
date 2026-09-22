@@ -833,12 +833,20 @@ func (s *Server) nox_xxx_gameTick_4D2580_server_D() {
 	if !online && (u == nil || sub_4DCC10(u) != 1) {
 		return
 	}
+	v28 := sub_4DB1C0()
+	if online {
+		if v28 != nil {
+			s.scriptOnEvent(script.EventMapShutdown)
+			v30 := alloc.GoString(*(**byte)(unsafe.Add(v28, 700)))
+			s.SwitchMap(v30)
+		}
+		sub_4DB170(false, v28, 0)
+		return
+	}
 	savedone := false
 	dead := u != nil && u.Flags().Has(object.FlagDead)
 	if !dead {
 		s.scriptOnEvent(script.EventMapShutdown)
-	}
-	if !dead && u != nil {
 		noxflags.SetGame(noxflags.GameFlag28)
 		savedone = saveCoopGame(saveName1557900)
 		noxflags.UnsetGame(noxflags.GameFlag28)
@@ -847,13 +855,7 @@ func (s *Server) nox_xxx_gameTick_4D2580_server_D() {
 			NewDialogWindow(nil, v35, v35, gui.DialogOKButton|gui.DialogFlag6, nil, nil)
 		}
 	}
-	v28 := sub_4DB1C0()
-	if online {
-		if v28 != nil {
-			v30 := alloc.GoString(*(**byte)(unsafe.Add(v28, 700)))
-			s.SwitchMap(v30)
-		}
-	} else if dead || !savedone {
+	if dead || !savedone {
 		if v28 != nil && !savedone {
 			asObjectS(u).SetPos(legacy.AsPointf(unsafe.Pointer(*(*uintptr)(unsafe.Add(v28, 700)) + 80)))
 		}
@@ -1281,7 +1283,7 @@ func (s *Server) nox_xxx_mapExitAndCheckNext_4D1860_server() error {
 	if noxflags.HasGame(noxflags.GameModeQuest) {
 		s.nox_server_questMapNextLevel()
 	}
-	if noxflags.HasGame(noxflags.GameModeCoop) && legacy.Nox_xxx_mapLoadRequired_4DCC80() == 0 {
+	if noxflags.HasGame(noxflags.GameModeCoop) && !noxflags.HasGame(noxflags.GameOnline) && legacy.Nox_xxx_mapLoadRequired_4DCC80() == 0 {
 		SaveCoopX(common.SaveAuto, 30)
 	}
 	legacy.Nox_xxx_mapLoadOrSaveMB_4DCC70(0)
