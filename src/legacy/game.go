@@ -96,6 +96,8 @@ var (
 	Nox_coopLootClaimable               func(pl, item *server.Object) int
 	Nox_coopLootClone                   func(item *server.Object) *server.Object
 	Nox_coopLootClaimed                 func(pl, item *server.Object)
+	Nox_coopShopBoughtCount             func(keeper, pl *server.Object, entry int) int
+	Nox_coopShopBuy                     func(keeper, pl *server.Object, entry int)
 )
 
 func init() {
@@ -149,6 +151,21 @@ func nox_coopLootClone(item *nox_object_t) *nox_object_t {
 func nox_coopLootClaimed(pl, item *nox_object_t) {
 	if Nox_coopLootClaimed != nil {
 		Nox_coopLootClaimed(asObjectS(pl), asObjectS(item))
+	}
+}
+
+//export nox_coopShopBoughtCount
+func nox_coopShopBoughtCount(keeper, pl *nox_object_t, entry C.int) C.int {
+	if Nox_coopShopBoughtCount == nil {
+		return 0
+	}
+	return C.int(Nox_coopShopBoughtCount(asObjectS(keeper), asObjectS(pl), int(entry)))
+}
+
+//export nox_coopShopBuy
+func nox_coopShopBuy(keeper, pl *nox_object_t, entry C.int) {
+	if Nox_coopShopBuy != nil {
+		Nox_coopShopBuy(asObjectS(keeper), asObjectS(pl), int(entry))
 	}
 }
 

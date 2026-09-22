@@ -26,7 +26,6 @@ import (
 
 	noxflags "github.com/noxworld-dev/opennox/v1/common/flags"
 	"github.com/noxworld-dev/opennox/v1/common/memmap"
-	"github.com/noxworld-dev/opennox/v1/common/ntype"
 	"github.com/noxworld-dev/opennox/v1/common/sound"
 	"github.com/noxworld-dev/opennox/v1/internal/cryptfile"
 	"github.com/noxworld-dev/opennox/v1/internal/netlist"
@@ -95,7 +94,7 @@ type Server struct {
 	flag1548704 bool
 	flag3592    bool
 
-	coopProfileSeen map[ntype.PlayerInd]bool
+	coopProfileSeen map[string]bool // character names already profiled/initialized this session
 
 	serverConn netstr.Handle
 }
@@ -649,6 +648,7 @@ func (s *Server) nox_xxx_unitAroundPlayerFn_5193B0(it, u *server.Object) {
 func (s *Server) newSession() error {
 	gameLog.Println("new server session")
 	s.coopProfileSeen = nil
+	s.CinemaLock = false
 	legacy.Sub_4D15C0()
 	legacy.Set_dword_5d4594_2649712(0x80000000)
 	s.Players.SetHost(nil, nil)

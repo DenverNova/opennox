@@ -551,6 +551,7 @@ type ObjectExt struct {
 	HealthFraction      float32 // float fraction of health; 0 <= v < 1
 
 	LootClaimedBy uint32 // bitmask of player indices that already looted this object (online coop)
+	ShopBought    map[int]map[int]int // shop stock entry index -> player index -> units bought (online coop)
 }
 
 func (obj *ObjectExt) defaults() {

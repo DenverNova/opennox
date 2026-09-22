@@ -35,6 +35,8 @@ extern uint32_t dword_5d4594_2487244;
 extern uint32_t dword_5d4594_1599696;
 extern uint32_t dword_587000_237036;
 extern void* nox_alloc_pendingOwn_2386916;
+
+int nox_coopShopBoughtCount(nox_object_t* keeper, nox_object_t* pl, int entry);
 extern uint32_t dword_5d4594_2386228;
 extern void* nox_alloc_spawn_2386216;
 extern uint32_t dword_587000_230092;
@@ -1939,7 +1941,22 @@ void nox_xxx_loadShopItems_50E970(int a1) {
 						v34 = v33 + 8;
 						do {
 							v41 = 0;
-							if (*v34) {
+							int vMax = (unsigned char)*v34;
+							if (vMax && nox_common_gameFlags_check_40A5C0(2048) &&
+								nox_common_gameFlags_check_40A5C0(8192)) {
+								int shopPlayer = *(uint32_t*)(v1 + 8);
+								if (!(*(uint8_t*)(shopPlayer + 8) & 4)) {
+									shopPlayer = *(uint32_t*)(v1 + 12);
+								}
+								if (shopPlayer && (*(uint8_t*)(shopPlayer + 8) & 4)) {
+									vMax -= nox_coopShopBoughtCount((nox_object_t*)v3,
+																  (nox_object_t*)shopPlayer, v42);
+									if (vMax < 0) {
+										vMax = 0;
+									}
+								}
+							}
+							if (vMax) {
 								do {
 									uint32_t v34p = *((uint32_t*)v34 - 1);
 									v35 = nox_xxx_newObjectWithTypeInd_4E3450(v34p);
@@ -1971,7 +1988,7 @@ void nox_xxx_loadShopItems_50E970(int a1) {
 										nox_xxx_addItemToShopSession_50EE00(v1, *(float*)&v36);
 									}
 									++v41;
-								} while (v41 < *v34);
+								} while (v41 < vMax);
 							}
 							v34 += 28;
 							++v42;

@@ -62,6 +62,21 @@ func BlindPlayers(blind bool) {
 
 type Player = server.Player
 
+// coopSpawnAnchor picks a unit near which a joining player should spawn in
+// online coop: the session host's unit when available, otherwise the first
+// other active player, so late joiners appear where the party actually is.
+func (s *Server) coopSpawnAnchor(pl *Player, punit *server.Object) *server.Object {
+	if u := s.Players.HostUnit(); u != nil && u != punit {
+		return u
+	}
+	for _, p := range s.Players.List() {
+		if p != pl && p.IsActive() && p.PlayerUnit != nil {
+			return p.PlayerUnit
+		}
+	}
+	return nil
+}
+
 func (s *Server) PlayerSetPos(p *Player, pos types.Pointf) {
 	if p == nil {
 		return
@@ -427,6 +442,9 @@ func (s *Server) newPlayer(ind ntype.PlayerInd, opts *PlayerOpts) int {
 	} else {
 		start = s.nox_xxx_mapFindPlayerStart_4F7AB0(punit)
 		if noxflags.HasGame(noxflags.GameModeCoop) && noxflags.HasGame(noxflags.GameOnline) {
+			if anchor := s.coopSpawnAnchor(pl, punit); anchor != nil {
+				start = anchor.Pos()
+			}
 			start = s.RandomReachablePointAround(80.0, start)
 		}
 	}

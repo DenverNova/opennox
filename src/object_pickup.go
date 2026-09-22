@@ -60,6 +60,34 @@ func noxCoopLootClaimable(pl, item *server.Object) int {
 
 // noxCoopLootClaimed marks the world item as looted by the given player, hides
 // it on their client, and removes it from the world once everyone has a copy.
+func noxCoopShopBoughtCount(keeper, pl *server.Object, entry int) int {
+	if keeper == nil || pl == nil {
+		return 0
+	}
+	ext := keeper.GetExt()
+	if ext == nil || ext.ShopBought == nil {
+		return 0
+	}
+	return ext.ShopBought[entry][int(pl.UpdateDataPlayer().Player.PlayerIndex())]
+}
+
+func noxCoopShopBuy(keeper, pl *server.Object, entry int) {
+	if keeper == nil || pl == nil || entry < 0 {
+		return
+	}
+	ext := keeper.SetExt()
+	if ext == nil {
+		return
+	}
+	if ext.ShopBought == nil {
+		ext.ShopBought = make(map[int]map[int]int)
+	}
+	if ext.ShopBought[entry] == nil {
+		ext.ShopBought[entry] = make(map[int]int)
+	}
+	ext.ShopBought[entry][int(pl.UpdateDataPlayer().Player.PlayerIndex())]++
+}
+
 func noxCoopLootClaimed(pl, item *server.Object) {
 	if pl == nil || item == nil {
 		return

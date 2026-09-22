@@ -659,21 +659,22 @@ func (s *Server) coopApplyProfile(pl *server.Player) {
 		return
 	}
 	if s.coopProfileSeen == nil {
-		s.coopProfileSeen = make(map[ntype.PlayerInd]bool)
+		s.coopProfileSeen = make(map[string]bool)
 	}
 	ind := pl.PlayerIndex()
-	path := coopProfilePath(pl.Name())
+	name := pl.Name()
+	path := coopProfilePath(name)
 	if _, err := ifs.Stat(path); err == nil {
 		if legacy.Nox_xxx_cliPlrInfoLoadFromFile_41A2E0(path, ind) == 0 {
-			saveLog.Printf("cannot load coop profile for %q", pl.Name())
+			saveLog.Printf("cannot load coop profile for %q", name)
 		}
-		s.coopProfileSeen[ind] = true
+		s.coopProfileSeen[name] = true
 		return
 	}
-	if s.coopProfileSeen[ind] {
+	if s.coopProfileSeen[name] {
 		return
 	}
-	s.coopProfileSeen[ind] = true
+	s.coopProfileSeen[name] = true
 	serverSetAllBeastScrolls(pl, false)
 	serverSetAllSpells(pl, false, 0)
 	serverSetAllWarriorAbilities(pl, false, 0)

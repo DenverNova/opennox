@@ -103,6 +103,8 @@ func init() {
 	legacy.Nox_coopLootClaimable = noxCoopLootClaimable
 	legacy.Nox_coopLootClone = noxCoopLootClone
 	legacy.Nox_coopLootClaimed = noxCoopLootClaimed
+	legacy.Nox_coopShopBoughtCount = noxCoopShopBoughtCount
+	legacy.Nox_coopShopBuy = noxCoopShopBuy
 	legacy.Sub_4D6F30 = sub_4D6F30
 	legacy.GetNetPlayerBufSize = getNetPlayerBufSize
 	legacy.Nox_netlist_addToMsgListSrv = nox_netlist_addToMsgListSrv

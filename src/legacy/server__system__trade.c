@@ -15,6 +15,9 @@ extern uint32_t dword_5d4594_2386548;
 extern uint32_t dword_5d4594_2386560;
 extern void* nox_alloc_tradeItems_2386496;
 
+int nox_coopShopBoughtCount(nox_object_t* keeper, nox_object_t* pl, int entry);
+void nox_coopShopBuy(nox_object_t* keeper, nox_object_t* pl, int entry);
+
 //----- (0050E7A0) --------------------------------------------------------
 int sub_50E7A0(uint32_t* a1, int a2) {
 	int* v2; // esi
@@ -138,9 +141,31 @@ int sub_50F1A0(int a1, int a2) {
 int nox_xxx_servSendShopItems_50F280(int a1, int a2) {
 	int result;  // eax
 	uint32_t* i; // esi
+	unsigned char skipped[256];
+	int coopShop;
 
 	result = a2;
+	coopShop = nox_common_gameFlags_check_40A5C0(2048) && nox_common_gameFlags_check_40A5C0(8192);
+	if (coopShop) {
+		memset(skipped, 0, sizeof(skipped));
+	}
 	for (i = *(uint32_t**)(a2 + 20); i; i = (uint32_t*)i[2]) {
+		if (coopShop) {
+			int ent = nox_xxx_getSomeShopData_5103A0(a2, *(int*)i);
+			if (ent >= 0 && ent < 256) {
+				int shopKeeper = *(uint32_t*)(a2 + 8);
+				int shopPlayer = shopKeeper;
+				if (*(uint8_t*)(shopKeeper + 8) & 4) {
+					shopKeeper = *(uint32_t*)(a2 + 12);
+				} else {
+					shopPlayer = *(uint32_t*)(a2 + 12);
+				}
+				if (skipped[ent] < nox_coopShopBoughtCount((nox_object_t*)shopKeeper, (nox_object_t*)shopPlayer, ent)) {
+					skipped[ent]++;
+					continue;
+				}
+			}
+		}
 		result = sub_50F2B0(a1, i);
 	}
 	return result;
@@ -606,9 +631,26 @@ void sub_5100C0_trade(int a1, uint32_t* a2, int a3) {
 			} else {
 				v14(v3, v13, 1, 1);
 			}
-			sub_510320(v6, (int)a2);
-			if (sub_510540(v6)) {
-				sub_50E7A0(a2, v6);
+			if (nox_common_gameFlags_check_40A5C0(2048) && nox_common_gameFlags_check_40A5C0(8192)) {
+				int shopKeeper = *(uint32_t*)(a2 + 8);
+				if (*(uint8_t*)(shopKeeper + 8) & 4) {
+					shopKeeper = *(uint32_t*)(a2 + 12);
+				}
+				if (shopKeeper && (*(uint8_t*)(shopKeeper + 8) & 2) && (*(uint8_t*)(shopKeeper + 12) & 8)) {
+					nox_coopShopBuy((nox_object_t*)shopKeeper, (nox_object_t*)v3,
+									nox_xxx_getSomeShopData_5103A0(a2, v6));
+					sub_50E7A0(a2, v6);
+				} else {
+					sub_510320(v6, (int)a2);
+					if (sub_510540(v6)) {
+						sub_50E7A0(a2, v6);
+					}
+				}
+			} else {
+				sub_510320(v6, (int)a2);
+				if (sub_510540(v6)) {
+					sub_50E7A0(a2, v6);
+				}
 			}
 			nox_xxx_playerSubGold_4FA5D0(v3, v8);
 			sub_4D8870(*(unsigned char*)(*(uint32_t*)(v18 + 276) + 2064), v3);
@@ -707,9 +749,26 @@ float* sub_510640_trade(int a1, int a2, int a3, float* a4) {
 			} else {
 				nox_xxx_inventoryPutImpl_4F3070(v4, (int)v12, 1);
 			}
-			sub_510320(v7, (int)v6);
-			if (sub_510540(v7)) {
-				sub_50E7A0(v6, v7);
+			if (nox_common_gameFlags_check_40A5C0(2048) && nox_common_gameFlags_check_40A5C0(8192)) {
+				int shopKeeper = *(uint32_t*)(v6 + 8);
+				if (*(uint8_t*)(shopKeeper + 8) & 4) {
+					shopKeeper = *(uint32_t*)(v6 + 12);
+				}
+				if (shopKeeper && (*(uint8_t*)(shopKeeper + 8) & 2) && (*(uint8_t*)(shopKeeper + 12) & 8)) {
+					nox_coopShopBuy((nox_object_t*)shopKeeper, (nox_object_t*)v4,
+									nox_xxx_getSomeShopData_5103A0(v6, v7));
+					sub_50E7A0(v6, v7);
+				} else {
+					sub_510320(v7, (int)v6);
+					if (sub_510540(v7)) {
+						sub_50E7A0(v6, v7);
+					}
+				}
+			} else {
+				sub_510320(v7, (int)v6);
+				if (sub_510540(v7)) {
+					sub_50E7A0(v6, v7);
+				}
 			}
 			nox_xxx_playerSubGold_4FA5D0(v4, v8);
 			sub_4D8870(*(unsigned char*)(*(uint32_t*)(v20 + 276) + 2064), v4);
