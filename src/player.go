@@ -77,6 +77,63 @@ func (s *Server) coopSpawnAnchor(pl *Player, punit *server.Object) *server.Objec
 	return nil
 }
 
+// coopRespawnTick runs the coop death rule: a dead player revives after
+// game.coop.respawn_seconds next to a random living teammate with their gear
+// intact. If nobody is left alive when a timer expires the party wipes and the
+// map reloads with everyone's saved profiles.
+func (s *Server) coopRespawnTick() {
+	if !noxCoopOnline() {
+		return
+	}
+	delay := s.SecToFramesF(coopRespawnSeconds)
+	living := 0
+	for _, p := range s.Players.List() {
+		u := p.PlayerUnit
+		if p == nil || !p.IsActive() || u == nil {
+			continue
+		}
+		ind := int(p.PlayerIndex())
+		if u.Flags().Has(object.FlagDead) {
+			if s.coopDeathStart == nil {
+				s.coopDeathStart = make(map[int]uint32)
+			}
+			if _, ok := s.coopDeathStart[ind]; !ok {
+				s.coopDeathStart[ind] = s.Frame()
+			}
+			continue
+		}
+		if p.Field3680&1 == 0 {
+			living++
+		}
+		delete(s.coopDeathStart, ind)
+	}
+	if len(s.coopDeathStart) == 0 {
+		return
+	}
+	if living == 0 {
+		s.coopSaveAllPlayers()
+		s.coopDeathStart = nil
+		s.SwitchMap(s.getServerMap())
+		return
+	}
+	for ind, t0 := range s.coopDeathStart {
+		if s.Frame()-t0 < delay {
+			continue
+		}
+		p := s.Players.ByInd(ntype.PlayerInd(ind))
+		if p == nil || p.PlayerUnit == nil {
+			continue
+		}
+		delete(s.coopDeathStart, ind)
+		if p.Field3680&1 != 0 {
+			legacy.Sub_4DF3C0(p)
+			legacy.Nox_xxx_playerLeaveObserver_0_4E6AA0(p)
+			p.CameraUnlock()
+		}
+		legacy.Nox_xxx_playerRespawn_4F7EF0(p.PlayerUnit)
+	}
+}
+
 func (s *Server) PlayerSetPos(p *Player, pos types.Pointf) {
 	if p == nil {
 		return

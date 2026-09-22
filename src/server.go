@@ -94,7 +94,8 @@ type Server struct {
 	flag1548704 bool
 	flag3592    bool
 
-	coopProfileSeen map[string]bool // character names already profiled/initialized this session
+	coopProfileSeen map[string]bool  // character names already profiled/initialized this session
+	coopDeathStart  map[int]uint32   // player index -> frame they died, for the coop respawn timer
 
 	serverConn netstr.Handle
 }
@@ -330,6 +331,7 @@ func (s *Server) nox_xxx_gameTick_4D2580_server_B(ticks uint64) bool {
 	sub_40B790()
 	if !noxflags.HasGame(noxflags.GamePause) {
 		s.updateUnits()
+		s.coopRespawnTick()
 		legacy.Sub_4EC720()
 		if noxflags.HasGame(noxflags.GameModeQuest) {
 			legacy.Sub_50D890()
@@ -648,6 +650,7 @@ func (s *Server) nox_xxx_unitAroundPlayerFn_5193B0(it, u *server.Object) {
 func (s *Server) newSession() error {
 	gameLog.Println("new server session")
 	s.coopProfileSeen = nil
+	s.coopDeathStart = nil
 	s.CinemaLock = false
 	legacy.Sub_4D15C0()
 	legacy.Set_dword_5d4594_2649712(0x80000000)

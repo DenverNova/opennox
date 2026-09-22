@@ -98,6 +98,7 @@ var (
 	Nox_coopLootClaimed                 func(pl, item *server.Object)
 	Nox_coopShopBoughtCount             func(keeper, pl *server.Object, entry int) int
 	Nox_coopShopBuy                     func(keeper, pl *server.Object, entry int)
+	Nox_coopRespawnAnchor               func(u *server.Object) *server.Object
 )
 
 func init() {
@@ -152,6 +153,14 @@ func nox_coopLootClaimed(pl, item *nox_object_t) {
 	if Nox_coopLootClaimed != nil {
 		Nox_coopLootClaimed(asObjectS(pl), asObjectS(item))
 	}
+}
+
+//export nox_coopRespawnAnchor
+func nox_coopRespawnAnchor(u *nox_object_t) *nox_object_t {
+	if Nox_coopRespawnAnchor == nil {
+		return nil
+	}
+	return asObjectC(Nox_coopRespawnAnchor(asObjectS(u)))
 }
 
 //export nox_coopShopBoughtCount

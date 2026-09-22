@@ -15,6 +15,7 @@ import (
 	"github.com/noxworld-dev/opennox-lib/datapath"
 	"github.com/noxworld-dev/opennox-lib/env"
 	"github.com/noxworld-dev/opennox-lib/ifs"
+	"github.com/noxworld-dev/opennox-lib/noxnet"
 	"github.com/noxworld-dev/opennox-lib/object"
 	"github.com/noxworld-dev/opennox-lib/player"
 	"github.com/noxworld-dev/opennox-lib/types"
@@ -678,8 +679,32 @@ func (s *Server) coopApplyProfile(pl *server.Player) {
 	serverSetAllBeastScrolls(pl, false)
 	serverSetAllSpells(pl, false, 0)
 	serverSetAllWarriorAbilities(pl, false, 0)
+	legacy.Nox_xxx_playerMakeDefItems_4EF7D0(pl.PlayerUnit, 1, 0)
+	s.coopSyncClearedKit(pl)
 	if pl.PlayerClass() == player.Warrior {
 		legacy.Nox_xxx_abilGivePlayerAll_4EED40(pl.PlayerUnit, int(pl.Level), 0)
+	}
+}
+
+// coopSyncClearedKit mirrors the server-side spellbook wipe to the client, which
+// keeps its own copy loaded from the character file.
+func (s *Server) coopSyncClearedKit(pl *Player) {
+	ind := int(pl.PlayerIndex())
+	var buf [4]byte
+	buf[0] = byte(noxnet.MSG_GAUNTLET)
+	send := func(sub byte, id int) {
+		buf[1] = sub
+		binary.LittleEndian.PutUint16(buf[2:], uint16(id))
+		s.NetSendPacketXxx1(ind, buf[:4], 0, 1)
+	}
+	for i := 1; i < len(pl.SpellLvl); i++ {
+		send(0x11, i)
+	}
+	for i := 1; i < 6; i++ {
+		send(0x12, i)
+	}
+	for i := 1; i < len(pl.BeastScrollLvl); i++ {
+		send(0x13, i)
 	}
 }
 

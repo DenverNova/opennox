@@ -56,6 +56,7 @@ var (
 	coopEnemyDamagePerPlayer  float64
 	coopEnemySpeed            float64
 	coopEnemySpeedPerPlayer   float64
+	coopRespawnSeconds        float64
 )
 
 func init() {
@@ -67,6 +68,7 @@ func init() {
 	configFloatPtr("game.coop.enemy_damage_per_player", "", 0.5, &coopEnemyDamagePerPlayer)
 	configFloatPtr("game.coop.enemy_speed", "", 1.0, &coopEnemySpeed)
 	configFloatPtr("game.coop.enemy_speed_per_player", "", 0.0, &coopEnemySpeedPerPlayer)
+	configFloatPtr("game.coop.respawn_seconds", "", 30.0, &coopRespawnSeconds)
 	gui.RegisterState(client.StateMovies, "Movies", nox_game_rollLogoAndStart_4AB1F0)
 	gui.RegisterState(client.StateMainMenu, "MainMenu", nox_game_showMainMenu4A1C00)
 	gui.RegisterState(client.StateCharSelect, "CharSelect", func() bool {

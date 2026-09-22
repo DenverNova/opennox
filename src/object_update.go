@@ -257,6 +257,9 @@ func (s *Server) unitUpdatePlayerImplA(u *server.Object) (a1, v68 bool, _ bool) 
 		}
 		v41 := int(legacy.Nox_xxx_servGamedataGet_40A020(1024))
 		if !noxflags.HasGame(noxflags.GameModeElimination) || (v41 <= 0) || (int(pl.Field2140) < v41) {
+			if noxflags.HasGame(noxflags.GameModeCoop) && noxflags.HasGame(noxflags.GameOnline) {
+				return a1, v68, false
+			}
 			if noxflags.HasGame(noxflags.GameOnline) && (pl.Field3680&1 == 0) {
 				cb := s.Players.Control.Player(pl.Index())
 				for it := cb.First(); it != nil; it = cb.Next() {
@@ -924,7 +927,11 @@ func nox_xxx_updatePlayerObserver_4E62F0(a1p *server.Object) {
 			if !noxflags.HasGame(noxflags.GameModeQuest) {
 				v22 := s.nox_xxx_mapFindPlayerStart_4F7AB0(pl.PlayerUnit)
 				if noxflags.HasGame(noxflags.GameModeCoop) && noxflags.HasGame(noxflags.GameOnline) {
-					v22 = s.RandomReachablePointAround(80.0, v22)
+					anchor := pl.PlayerUnit.Pos()
+					if au := noxCoopRespawnAnchor(pl.PlayerUnit); au != nil {
+						anchor = au.Pos()
+					}
+					v22 = s.RandomReachablePointAround(80.0, anchor)
 				}
 				asObjectS(pl.PlayerUnit).SetPos(v22)
 			}

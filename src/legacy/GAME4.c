@@ -1417,6 +1417,7 @@ int nox_xxx_weaponGetStaminaByType_4F7E80(int a1) {
 }
 
 //----- (004F7EF0) --------------------------------------------------------
+nox_object_t* nox_coopRespawnAnchor(nox_object_t* u);
 short nox_xxx_playerRespawn_4F7EF0(nox_object_t* a1p) {
 	int a1 = a1p;
 	char* v1;     // eax
@@ -1442,7 +1443,8 @@ short nox_xxx_playerRespawn_4F7EF0(nox_object_t* a1p) {
 				*((uint8_t*)v3 + *(unsigned char*)(v3[69] + 2064) + 452) = -6;
 				nox_xxx_netPriMsgToPlayer_4DA2C0(a1, "GeneralPrint:Respawn", 0);
 			} else {
-				nox_xxx_playerMakeDefItems_4EF7D0(a1, 1, 0);
+				nox_xxx_playerMakeDefItems_4EF7D0(
+					a1, 1, nox_common_gameFlags_check_40A5C0(2048) && nox_common_gameFlags_check_40A5C0(0x2000));
 			}
 			if (nox_common_gameFlags_check_40A5C0(4096)) {
 				nox_xxx_aud_501960(1006, a1, 0, 0);
@@ -1460,6 +1462,12 @@ short nox_xxx_playerRespawn_4F7EF0(nox_object_t* a1p) {
 			} else {
 				nox_xxx_mapFindPlayerStart_4F7AB0(&v9, a1);
 				if (nox_common_gameFlags_check_40A5C0(2048) && nox_common_gameFlags_check_40A5C0(0x2000)) {
+					nox_object_t* anchor = nox_coopRespawnAnchor((nox_object_t*)a1);
+					if (anchor) {
+						v9 = *(float2*)((int)anchor + 56);
+					} else {
+						v9 = *(float2*)(a1 + 56);
+					}
 					float2 spread;
 					int tries = 32;
 					do {

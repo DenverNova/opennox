@@ -88,6 +88,29 @@ func noxCoopShopBuy(keeper, pl *server.Object, entry int) {
 	ext.ShopBought[entry][int(pl.UpdateDataPlayer().Player.PlayerIndex())]++
 }
 
+// noxCoopRespawnAnchor picks a random living party member's unit to respawn
+// next to, so a revived player rejoins the party instead of the map start.
+// Returns nil when nobody else is alive, meaning respawn in place.
+func noxCoopRespawnAnchor(u *server.Object) *server.Object {
+	if u == nil {
+		return nil
+	}
+	var cand []*server.Object
+	for _, p := range noxServer.Players.List() {
+		if p == nil || !p.IsActive() || p.PlayerUnit == nil || p.PlayerUnit == u {
+			continue
+		}
+		if p.PlayerUnit.Flags().Has(object.FlagDead) || p.Field3680&1 != 0 {
+			continue
+		}
+		cand = append(cand, p.PlayerUnit)
+	}
+	if len(cand) == 0 {
+		return nil
+	}
+	return cand[noxServer.Rand.Logic.IntClamp(0, len(cand)-1)]
+}
+
 func noxCoopLootClaimed(pl, item *server.Object) {
 	if pl == nil || item == nil {
 		return
