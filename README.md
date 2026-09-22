@@ -33,7 +33,8 @@ This branch adds cooperative play for the original single-player campaigns. The 
 **How it works**
 
 - Every player creates their own character and class. Warriors learn abilities by leveling, while Wizards and Conjurers learn spells from spellbooks, exactly like single-player.
-- Loot is instanced: each player picks up their own copy of items found in the world, so nobody misses the gear or spellbooks the campaign expects them to have.
+- Campaign progress is kept per character, separate from the multiplayer character's normal all-powers setup. Each character's coop stats, spells, abilities and gear are saved to `save/coop/<name>.plr` at every chapter transition and when they leave, and restored when they join or the next chapter loads — so players can drop out and rejoin mid-campaign without losing progress.
+- Loot is instanced: each player picks up their own copy of items found in the world, which then disappears only for them, so nobody misses the gear or spellbooks the campaign expects them to have.
 - Experience is shared evenly: every player is awarded the same XP the game would grant in single-player, so the party levels at the pace the campaign was designed for.
 - Monsters scale with the number of players to keep fights challenging.
 - Chapter exits wait for the whole party: everyone alive must reach the exit before the next chapter loads. Players who die respawn and are revived on the next map.
