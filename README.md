@@ -20,6 +20,42 @@ If something doesn't work, please [open an issue](https://github.com/noxworld-de
 
 For a list of new features see [this page](https://noxworld-dev.github.io/opennox-docs/opennox/features/index.html).
 
+## Cooperative Campaign
+
+This branch adds cooperative play for the original single-player campaigns. The Conjurer, Warrior and Wizard story maps can be played through together online, with the same chapters, quests, cutscenes and progression as solo play.
+
+**How to play**
+
+1. Every player needs this build of OpenNox and a copy of Nox (e.g. the GOG release).
+2. One player picks **Multiplayer → Host Game**, sets **Game Type** to **Coop**, picks a campaign map (such as `con01a`, `war01a` or `wiz01a`) and presses **Go**.
+3. Other players join through the normal **Join Game** browser.
+
+**How it works**
+
+- Every player creates their own character and class. Warriors learn abilities by leveling, while Wizards and Conjurers learn spells from spellbooks, exactly like single-player.
+- Loot is instanced: each player picks up their own copy of items found in the world, so nobody misses the gear or spellbooks the campaign expects them to have.
+- Experience is shared evenly: every player is awarded the same XP the game would grant in single-player, so the party levels at the pace the campaign was designed for.
+- Monsters scale with the number of players to keep fights challenging.
+- Chapter exits wait for the whole party: everyone alive must reach the exit before the next chapter loads. Players who die respawn and are revived on the next map.
+- When a cutscene starts, the party is gathered around the player who triggered it and input is frozen until the scene ends.
+
+**Difficulty settings**
+
+Monster strength can be tuned in `opennox.yml` (created next to the game data after first launch). Each setting is a multiplier, and the "per player" variants add that amount for every player beyond the first:
+
+```yaml
+game:
+  coop:
+    enemy_health: 1.0             # base health multiplier
+    enemy_health_per_player: 1.0  # extra health per additional player
+    enemy_damage: 1.0             # base damage multiplier
+    enemy_damage_per_player: 0.5  # extra damage per additional player
+    enemy_speed: 1.0              # base speed multiplier
+    enemy_speed_per_player: 0.0   # extra speed per additional player
+```
+
+With the defaults, two players face monsters with 2× health and 1.5× damage, three players 3× health and 2× damage, and so on. Raise or lower the numbers to taste.
+
 ## Download OpenNox
 
 <a href="https://github.com/noxworld-dev/opennox/releases"><img alt="OpenNox releases" src="https://img.shields.io/github/downloads/noxworld-dev/opennox/total?style=flat&label=releases"></a>
