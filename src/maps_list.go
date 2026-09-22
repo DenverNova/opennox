@@ -1,6 +1,10 @@
 package opennox
 
 import (
+	"io"
+	"os"
+	"path/filepath"
+
 	"github.com/noxworld-dev/opennox-lib/datapath"
 	"github.com/noxworld-dev/opennox-lib/ifs"
 	"github.com/noxworld-dev/opennox-lib/maps"
@@ -11,9 +15,42 @@ import (
 )
 
 func scanMaps() (maps.MapList, error) {
-	return maps.Scan(datapath.Data(maps.Dir), &maps.ScanOptions{
-		Solo: true,
-	})
+	// same as maps.Scan, but without the solo prefix filter: it always skips
+	// wiz*/con* dirs, and campaign maps must be listed for coop games
+	path := datapath.Data(maps.Dir)
+	dir, err := ifs.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer dir.Close()
+	var (
+		list maps.MapList
+		last error
+	)
+	for {
+		page, err := dir.ReadDir(100)
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return list, err
+		}
+		for _, fi := range page {
+			if !fi.IsDir() {
+				continue
+			}
+			info, err := maps.ReadMapInfo(filepath.Join(path, fi.Name()))
+			if os.IsNotExist(err) {
+				continue
+			} else if err != nil {
+				maps.Log.Printf("invalid map file: %q: %v", fi.Name(), err)
+				last = err
+				continue
+			}
+			list = append(list, *info)
+		}
+	}
+	list.Sort()
+	return list, last
 }
 
 func nox_common_scanAllMaps_4D07F0() error {
