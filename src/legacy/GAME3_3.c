@@ -7707,7 +7707,7 @@ int nox_xxx_plrReadVals_4EEDC0(nox_object_t* a1p, int a2) {
 	v26 = &v26a;
 	v5 = &v5a;
 	v25 = &v25a;
-	if (nox_common_gameFlags_check_40A5C0(0x2000)) {
+	if (nox_common_gameFlags_check_40A5C0(0x2000) && !nox_common_gameFlags_check_40A5C0(2048)) {
 		*(uint16_t*)(*(uint32_t*)(v2 + 556) + 4) = nox_float2int(*v5);
 		v6 = nox_float2int16_abs(*v5);
 		nox_xxx_unitSetHP_4E4560(v2, v6);
@@ -7779,7 +7779,7 @@ int sub_4EF140(int a1) {
 	int v5;     // [esp-Ch] [ebp-14h]
 
 	v1 = *(uint32_t*)(*(uint32_t*)(a1 + 748) + 276);
-	if (nox_common_gameFlags_check_40A5C0(0x2000)) {
+	if (nox_common_gameFlags_check_40A5C0(0x2000) && !nox_common_gameFlags_check_40A5C0(2048)) {
 		v2 = *(uint32_t*)(v1 + 4644);
 		*(uint8_t*)(v1 + 3684) = NOX_PLAYER_MAX_LEVEL;
 		sub_56F820(v2, 0xAu);

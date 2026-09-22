@@ -441,7 +441,7 @@ func (s *Server) newPlayer(ind ntype.PlayerInd, opts *PlayerOpts) int {
 			legacy.Sub_509C30(pl)
 		}
 	}
-	if !noxflags.HasGame(noxflags.GameModeCoop) {
+	if !noxflags.HasGame(noxflags.GameModeCoop) || noxflags.HasGame(noxflags.GameOnline) {
 		if noxflags.HasGame(noxflags.GameModeQuest) {
 			legacy.Nox_game_sendQuestStage_4D6960(ind)
 			return int(punit.NetCode)

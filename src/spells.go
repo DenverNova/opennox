@@ -40,15 +40,15 @@ func (sp *serverSpells) Free() {
 var _ = [1]struct{}{}[40-unsafe.Sizeof(server.PhonemeLeaf{})]
 
 func nox_xxx_spellAwardAll1_4EFD80(p *server.Player) {
-	serverSetAllBeastScrolls(p, noxflags.HasEngine(noxflags.EngineAdmin))
+	serverSetAllBeastScrolls(p, noxflags.HasEngine(noxflags.EngineAdmin) && !noxflags.HasGame(noxflags.GameModeCoop))
 }
 
 func nox_xxx_spellAwardAll2_4EFC80(p *server.Player) {
-	serverSetAllSpells(p, noxflags.HasEngine(noxflags.EngineAdmin), 0)
+	serverSetAllSpells(p, noxflags.HasEngine(noxflags.EngineAdmin) && !noxflags.HasGame(noxflags.GameModeCoop), 0)
 }
 
 func nox_xxx_spellAwardAll3_4EFE10(p *server.Player) {
-	serverSetAllWarriorAbilities(p, noxflags.HasEngine(noxflags.EngineAdmin), 0)
+	serverSetAllWarriorAbilities(p, noxflags.HasEngine(noxflags.EngineAdmin) && !noxflags.HasGame(noxflags.GameModeCoop), 0)
 }
 
 func nox_xxx_spellTitle_424930(ind int) (string, bool) {
