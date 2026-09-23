@@ -188,6 +188,18 @@ func (s noxScriptImpl) Players() []script.Player {
 }
 
 func (noxScriptImpl) HostPlayer() script.Player {
+	// In online coop, scripts asking for "the player" get whichever player's
+	// unit triggered the current script call, so campaign events (cinematics,
+	// dialogs, XP) fire for remote clients too and not just the host.
+	if noxCoopOnline() {
+		for _, u := range []*server.Object{noxServer.noxScript.Caller(), noxServer.noxScript.Trigger()} {
+			if u != nil && u.Class().Has(object.ClassPlayer) {
+				if pl := u.ControllingPlayer(); pl != nil {
+					return scrPlayer{pl}
+				}
+			}
+		}
+	}
 	return scrPlayer{noxServer.Players.Host()}
 }
 

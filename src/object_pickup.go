@@ -128,12 +128,9 @@ func noxCoopLootClaimed(pl, item *server.Object) {
 	item.Field37 &^= bit
 	item.Field38 |= bit
 	noxServer.Nox_xxx_netObjectOutOfSight_528A60(int(ud.Player.PlayerIndex()), item)
-	for _, p := range noxServer.Players.List() {
-		if p.IsActive() && ext.LootClaimedBy&(uint32(1)<<p.Index()) == 0 {
-			return
-		}
-	}
-	noxServer.DelayedDelete(item)
+	// Keep the world item after everyone present has claimed it: a player who
+	// joins later still gets their own copy. Claimed players never see it again
+	// via the Field38 filter.
 }
 
 // noxCoopLootClone creates an unlinked copy of a world item to place into

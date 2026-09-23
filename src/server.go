@@ -94,8 +94,9 @@ type Server struct {
 	flag1548704 bool
 	flag3592    bool
 
-	coopProfileSeen map[string]bool  // character names already profiled/initialized this session
-	coopDeathStart  map[int]uint32   // player index -> frame they died, for the coop respawn timer
+	coopProfileSeen  map[string]bool // character names already profiled/initialized this session
+	coopDeathStart   map[int]uint32  // player index -> frame they died, for the coop respawn timer
+	coopLastAutosave uint32          // frame of the last world save, for the periodic autosave
 
 	serverConn netstr.Handle
 }
@@ -651,7 +652,16 @@ func (s *Server) newSession() error {
 	gameLog.Println("new server session")
 	s.coopProfileSeen = nil
 	s.coopDeathStart = nil
+	s.coopLastAutosave = 0
 	s.CinemaLock = false
+	if noxflags.HasGame(noxflags.GameOnline) && !nox_xxx_gameIsSwitchToSolo_4DB240() {
+		// A fresh session must not inherit a previous session's world saves.
+		// The WORKING dir is only ever populated by coop saves; the Coop flag
+		// itself is not set until the map loads.
+		if err := deleteSaveDir(common.SaveTmp, false); err != nil {
+			gameLog.Println("clear coop save dir:", err)
+		}
+	}
 	legacy.Sub_4D15C0()
 	legacy.Set_dword_5d4594_2649712(0x80000000)
 	s.Players.SetHost(nil, nil)

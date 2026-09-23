@@ -3766,8 +3766,9 @@ void nox_xxx_collideExit_4E9090(int a1, int a2, int a3) {
 			}
 			*(uint32_t*)(v5 + 312) = a1;
 			*(uint32_t*)(v5 + 316) = 0;
-			nox_xxx_playerSetState_4FA020((uint32_t*)v4, 13);
-			nox_xxx_playerGoObserver_4E6860(*(uint32_t*)(v5 + 276), 0, 0);
+			// Online coop: mark the player as waiting at the exit but keep them
+			// fully controllable; observer mode made players invisible and froze
+			// them until everyone else arrived.
 			nox_xxx_netInformTextMsg2_4DA180(18, (uint8_t*)(v4 + 36));
 			nox_xxx_netPriMsgToPlayer_4DA2C0(v4, "objcoll.c:PlayerEntersWarp", 0);
 			nox_xxx_aud_501960(1003, a1, 0, 0);

@@ -57,6 +57,7 @@ var (
 	coopEnemySpeed            float64
 	coopEnemySpeedPerPlayer   float64
 	coopRespawnSeconds        float64
+	coopAutosaveSeconds       float64
 )
 
 func init() {
@@ -69,6 +70,7 @@ func init() {
 	configFloatPtr("game.coop.enemy_speed", "", 1.0, &coopEnemySpeed)
 	configFloatPtr("game.coop.enemy_speed_per_player", "", 0.0, &coopEnemySpeedPerPlayer)
 	configFloatPtr("game.coop.respawn_seconds", "", 30.0, &coopRespawnSeconds)
+	configFloatPtr("game.coop.autosave_seconds", "", 180.0, &coopAutosaveSeconds)
 	gui.RegisterState(client.StateMovies, "Movies", nox_game_rollLogoAndStart_4AB1F0)
 	gui.RegisterState(client.StateMainMenu, "MainMenu", nox_game_showMainMenu4A1C00)
 	gui.RegisterState(client.StateCharSelect, "CharSelect", func() bool {
@@ -895,10 +897,31 @@ func (s *Server) nox_xxx_gameTick_4D2580_server_D() {
 	}
 	v28 := sub_4DB1C0()
 	if online {
+		coop := noxflags.HasGame(noxflags.GameModeCoop)
 		if v28 != nil {
 			s.scriptOnEvent(script.EventMapShutdown)
+		}
+		if coop && dword_5d4594_1563080 && (u == nil || !u.Flags().Has(object.FlagDead)) {
+			name := saveName1557900
+			if name == "" {
+				name = common.SaveTmp
+			}
+			noxflags.SetGame(noxflags.GameFlag28)
+			saveCoopGame(name)
+			noxflags.UnsetGame(noxflags.GameFlag28)
+		}
+		if v28 != nil {
 			s.coopSaveAllPlayers()
 			v30 := alloc.GoString(*(**byte)(unsafe.Add(v28, 700)))
+			if coop {
+				// If the next map was visited before, restore its saved state
+				// instead of starting fresh.
+				if v31, err := nox_client_checkSaveMapExistsTmp(v30); err == nil && v31 != "" {
+					nox_xxx_gameSetSwitchSolo_4DB220(1)
+					nox_xxx_gameSetNoMPFlag_4DB230(1)
+					nox_xxx_gameSetSoloSavePath_4DB270(v31)
+				}
+			}
 			s.SwitchMap(v30)
 		}
 		sub_4DB170(false, v28, 0)
@@ -1105,6 +1128,9 @@ func (s *Server) nox_xxx_mapExitAndCheckNext_4D1860_server() error {
 	if noxflags.HasGame(noxflags.GameClient) {
 		noxClient.Nox_client_setCursorType(gui.CursorBusy)
 	}
+	// Stale map data must not be served to joining clients after a switch.
+	s.mapSend.currentData = nil
+	s.mapSend.savedFile = ""
 	legacy.Sub_4D22B0()
 	s.Nox_xxx_netMsgFadeBegin_4D9800(false, true)
 	s.scriptOnEvent(script.EventMapExit)
@@ -1125,6 +1151,9 @@ func (s *Server) nox_xxx_mapExitAndCheckNext_4D1860_server() error {
 	if nox_xxx_gameIsSwitchToSolo_4DB240() {
 		v5 := nox_xxx_mapFilenameGetSolo_4DB260()
 		merr = s.nox_server_loadMapFile_4CF5F0(v5, false)
+		if merr == nil && noxflags.HasGame(noxflags.GameOnline) {
+			s.mapSend.savedFile = v5
+		}
 	} else {
 		v7p := legacy.Sub_4165B0()
 		v7 := unsafe.Slice((*byte)(v7p), 58)
@@ -1350,7 +1379,7 @@ func (s *Server) nox_xxx_mapExitAndCheckNext_4D1860_server() error {
 	if noxflags.HasGame(noxflags.GameModeQuest) {
 		s.nox_server_questMapNextLevel()
 	}
-	if noxflags.HasGame(noxflags.GameModeCoop) && !noxflags.HasGame(noxflags.GameOnline) && legacy.Nox_xxx_mapLoadRequired_4DCC80() == 0 {
+	if noxflags.HasGame(noxflags.GameModeCoop) && legacy.Nox_xxx_mapLoadRequired_4DCC80() == 0 {
 		SaveCoopX(common.SaveAuto, 30)
 	}
 	legacy.Nox_xxx_mapLoadOrSaveMB_4DCC70(0)

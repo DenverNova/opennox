@@ -4547,6 +4547,8 @@ char nox_xxx_netSendObjects2Plr_519410(nox_object_t* a1p, nox_object_t* a2p) {
 				v14.field_4 = v10;
 				v14.field_C = v9;
 				if (v4 & 0x20400000 || (v4 = nox_xxx_playerMapTracksObj_4173D0(v5, a2)) != 0 ||
+					(nox_common_gameFlags_check_40A5C0(2048) &&
+					 nox_common_gameFlags_check_40A5C0(8192)) ||
 					(v4 = nox_xxx_mapTraceRay_535250(&v14, 0, 0, 69)) != 0) {
 					if (v6 & *(uint32_t*)(a2 + 148)) {
 						if (*(uint8_t*)(a2 + 20) & 0x20) {

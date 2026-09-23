@@ -13,6 +13,14 @@ import (
 )
 
 func (s noxScriptNS) GetHost() ns.Obj {
+	// In online coop, scripts asking for "the player" get whichever player's
+	// unit triggered the current script call, so campaign events (cinematics,
+	// dialogs, XP) fire for remote clients too and not just the host.
+	if noxCoopOnline() {
+		if u := asObjectS(s.s.noxScript.Caller()); u != nil && u.Class().Has(object.ClassPlayer) {
+			return nsObj{s.s, u}
+		}
+	}
 	u := s.s.Players.HostUnit()
 	if u == nil {
 		return nil

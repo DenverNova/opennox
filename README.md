@@ -37,10 +37,12 @@ This branch adds cooperative play for the original single-player campaigns. The 
 - Loot is instanced: each player picks up their own copy of items found in the world, which then disappears only for them, so nobody misses the gear or spellbooks the campaign expects them to have.
 - Shops are instanced too: every player sees their own stock at shopkeepers, and a purchase only removes it from their own inventory list, never from someone else's.
 - Players who join mid-campaign spawn near the host wherever the party currently is on the map, instead of back at the map's starting point.
+- The world itself is saved like a single-player game: monsters, dropped items, doors and triggered events are written to a shared autosave as the party plays and at every chapter exit. Moving to a chapter the party has visited before restores that chapter's saved state instead of resetting it, and players who join afterwards download the saved world — not a fresh copy of the map. If the whole party dies at once, the map reloads from the last save.
 - Experience is shared evenly: every player is awarded the same XP the game would grant in single-player, so the party levels at the pace the campaign was designed for.
 - Monsters scale with the number of players to keep fights challenging.
 - Chapter exits wait for the whole party: everyone alive must reach the exit before the next chapter loads. Players who die respawn and are revived on the next map.
-- When a cutscene starts, the party is gathered around the player who triggered it and input is frozen until the scene ends.
+- Dead players keep their gear and come back after a short timer next to a living teammate, instead of dropping a corpse.
+- When a cutscene starts, the party is gathered around the player who triggered it and input is frozen until the scene ends. Any player can trigger campaign cutscenes, not just the host.
 
 **Difficulty settings**
 
@@ -55,6 +57,8 @@ game:
     enemy_damage_per_player: 0.5  # extra damage per additional player
     enemy_speed: 1.0              # base speed multiplier
     enemy_speed_per_player: 0.0   # extra speed per additional player
+    respawn_seconds: 30.0         # how long dead players wait to revive
+    autosave_seconds: 180.0       # world-state autosave interval (0 disables)
 ```
 
 With the defaults, two players face monsters with 2× health and 1.5× damage, three players 3× health and 2× damage, and so on. Raise or lower the numbers to taste.

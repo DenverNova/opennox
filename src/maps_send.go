@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -30,6 +31,7 @@ type serverMapSend struct {
 	players     [common.MaxPlayers - 1]playerMapSend
 	mapName     string
 	currentData []byte // shared
+	savedFile   string // set when the loaded map came from a coop world save
 	activeCnt   int
 }
 
@@ -69,6 +71,7 @@ func (s *serverMapSend) CountQueued(pli ntype.PlayerInd) int {
 
 func (s *serverMapSend) Reset() {
 	s.currentData = nil
+	s.savedFile = ""
 	s.activeCnt = 0
 	for i := range s.players {
 		s.players[i].Clear(ntype.PlayerInd(i))
@@ -80,6 +83,7 @@ func (s *serverMapSend) sub_51A100() {
 		s.AbortAll(0)
 	}
 	s.currentData = nil
+	s.savedFile = ""
 }
 
 func (s *serverMapSend) abort(p *playerMapSend, errCode byte) {
@@ -214,6 +218,14 @@ func (s *serverMapSend) ReadMapFile() error {
 	}
 	mname2 := legacy.Nox_xxx_mapGetMapName_409B40()
 	fname := datapath.Maps(mname2, mname2+".nxz")
+	if s.savedFile != "" {
+		// The running map was restored from a coop save; joining clients
+		// need that world state, not the stock map archive.
+		nxz := strings.TrimSuffix(s.savedFile, filepath.Ext(s.savedFile)) + ".nxz"
+		if _, err := ifs.Stat(nxz); err == nil {
+			fname = nxz
+		}
+	}
 	f, err := ifs.Open(fname)
 	if err != nil {
 		str := strMan.GetStringInFile("CompressFail", "mapsend.c")

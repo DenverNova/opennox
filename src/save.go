@@ -809,21 +809,24 @@ func saveCoopGame(name string) bool {
 	if env.IsE2E() {
 		defer e2eOnSave(name)
 	}
-	sub_478000()
-	legacy.Nox_xxx_quickBarClose_4606B0()
+	online := noxflags.HasGame(noxflags.GameOnline)
+	if !online {
+		sub_478000()
+		legacy.Nox_xxx_quickBarClose_4606B0()
+	}
 	s := noxServer
 	pl := s.Players.ByInd(server.HostPlayerIndex)
-	if pl == nil {
-		return false
+	var u *server.Object
+	if pl != nil {
+		u = pl.PlayerUnit
 	}
-	u := pl.PlayerUnit
-	if u == nil {
+	if !online && u == nil {
 		return false
 	}
 	if name == "" {
 		return false
 	}
-	if u.Flags().Has(object.FlagDead) {
+	if u != nil && u.Flags().Has(object.FlagDead) {
 		return false
 	}
 	if err := ifs.Mkdir(datapath.Save()); err != nil {
@@ -839,26 +842,32 @@ func saveCoopGame(name string) bool {
 		saveLog.Printf("cannot create save dir: %v", err)
 		return false
 	}
-	if !nox_xxx_saveMakePlayerLocation_4DB600(dword_5d4594_1563084) {
+	if u != nil && !nox_xxx_saveMakePlayerLocation_4DB600(dword_5d4594_1563084) {
 		return false
 	}
 	mname = s.getServerMap()
 	path := datapath.Save(common.SaveTmp, mname, mname+".map")
-	if !legacy.Nox_xxx_mapSaveMap_51E010(path, 0) {
+	compress := 0
+	if online {
+		compress = 1 // clients receive the saved map as an .nxz
+	}
+	if !legacy.Nox_xxx_mapSaveMap_51E010(path, compress) {
 		return false
 	}
 	legacy.Nox_xxx_monstersAllBelongToHost_4DB6A0()
-	ppath := datapath.Save(common.SaveTmp, common.PlayerFile)
-	*memmap.PtrUint32(0x85B3FC, 10980) &= 0xFFFFFFF7
-	if memmap.Uint32(0x5D4594, 1563076) != 0 {
-		*memmap.PtrUint32(0x85B3FC, 10980) |= 8
-	}
-	*memmap.PtrUint8(0x85B3FC, 12257) = sub_450750()
-	if !savePlayerData(ppath, pl.PlayerIndex()) {
-		return false
-	}
-	if !legacy.Nox_xxx_mapSavePlayerDataMB_41A230(ppath) {
-		return false
+	if u != nil {
+		ppath := datapath.Save(common.SaveTmp, common.PlayerFile)
+		*memmap.PtrUint32(0x85B3FC, 10980) &= 0xFFFFFFF7
+		if memmap.Uint32(0x5D4594, 1563076) != 0 {
+			*memmap.PtrUint32(0x85B3FC, 10980) |= 8
+		}
+		*memmap.PtrUint8(0x85B3FC, 12257) = sub_450750()
+		if !savePlayerData(ppath, pl.PlayerIndex()) {
+			return false
+		}
+		if !legacy.Nox_xxx_mapSavePlayerDataMB_41A230(ppath) {
+			return false
+		}
 	}
 	if name != common.SaveTmp {
 		str := strMan.GetStringInFile("AutoSaveComplete", "SaveGame.c")
@@ -868,6 +877,7 @@ func saveCoopGame(name string) bool {
 			return false
 		}
 	}
+	s.coopLastAutosave = s.Frame()
 	dword_5d4594_1563092 = 0
 	dword_5d4594_1563088 = 0
 	return true

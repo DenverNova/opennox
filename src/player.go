@@ -8,6 +8,7 @@ import (
 	"math"
 	"unsafe"
 
+	"github.com/noxworld-dev/opennox-lib/common"
 	"github.com/noxworld-dev/opennox-lib/datapath"
 	"github.com/noxworld-dev/opennox-lib/ifs"
 	"github.com/noxworld-dev/opennox-lib/noxnet"
@@ -85,6 +86,16 @@ func (s *Server) coopRespawnTick() {
 	if !noxCoopOnline() {
 		return
 	}
+	if coopAutosaveSeconds > 0 {
+		if s.coopLastAutosave == 0 {
+			s.coopLastAutosave = s.Frame()
+		} else if s.Frame()-s.coopLastAutosave >= s.SecToFramesF(coopAutosaveSeconds) {
+			noxflags.SetGame(noxflags.GameFlag28)
+			saveCoopGame(common.SaveAuto)
+			noxflags.UnsetGame(noxflags.GameFlag28)
+			s.coopLastAutosave = s.Frame()
+		}
+	}
 	delay := s.SecToFramesF(coopRespawnSeconds)
 	living := 0
 	for _, p := range s.Players.List() {
@@ -113,7 +124,15 @@ func (s *Server) coopRespawnTick() {
 	if living == 0 {
 		s.coopSaveAllPlayers()
 		s.coopDeathStart = nil
-		s.SwitchMap(s.getServerMap())
+		mname := s.getServerMap()
+		if v31, err := nox_client_checkSaveMapExistsTmp(mname); err == nil && v31 != "" {
+			// Party wipe: restore the last autosaved world state if one exists.
+			nox_xxx_gameSetSwitchSolo_4DB220(1)
+			nox_xxx_gameSetNoMPFlag_4DB230(1)
+			nox_xxx_gameSetSoloSavePath_4DB270(v31)
+			legacy.Set_dword_5d4594_1563096(1)
+		}
+		s.SwitchMap(mname)
 		return
 	}
 	for ind, t0 := range s.coopDeathStart {
