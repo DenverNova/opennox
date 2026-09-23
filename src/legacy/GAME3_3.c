@@ -12140,10 +12140,13 @@ int nox_xxx_XFerInvLight_4F5AA0(int* a1) {
 	} else {
 		v2 = nox_xxx_netSpriteByCodeDynamic_45A6F0(a1[9]);
 	}
-	if (!v2) {
-		abort();
+	if (v2) {
+		memcpy(v6, v2 + 34, sizeof(v6));
+	} else if (a1[189]) {
+		// Server-side save: there is no client drawable, use the copy stored
+		// on the object when the map/save was read.
+		memcpy(v6, (void*)(a1[189] + 2432), sizeof(v6));
 	}
-	memcpy(v6, v2 + 34, sizeof(v6));
 LABEL_14:
 	if ((short)v3 >= 2) {
 		nox_xxx_fileReadWrite_426AC0_file3_fread(v6, 4u);

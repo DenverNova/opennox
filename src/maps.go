@@ -250,6 +250,7 @@ func nox_xxx_mapReadSection(cf *cryptfile.CryptFile, a1 unsafe.Pointer, name str
 func nox_xxx_mapWriteSectionsMB_426E20(a1 unsafe.Pointer) int {
 	cf := cryptfile.Global()
 	for _, sect := range noxMapSections {
+		mapLog.Printf("write section: %q", sect.Name)
 		buf := make([]byte, 1+len(sect.Name)+1)
 		buf[0] = byte(len(sect.Name)) + 1
 		copy(buf[1:], sect.Name)

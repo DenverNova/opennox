@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/noxworld-dev/opennox-lib/common"
 	"github.com/noxworld-dev/opennox-lib/console"
 	"github.com/noxworld-dev/opennox-lib/datapath"
 	"github.com/noxworld-dev/opennox-lib/ifs"
@@ -31,6 +32,18 @@ func init() {
 		Func:   noxCmdLoad,
 	})
 	noxCmdSet.Register(noxCmdSetMaps)
+	noxConsole.Register(&console.Command{
+		Token: "coopsave",
+		Help:  "trigger a coop world save now",
+		Flags: console.Server,
+		Func: func(ctx context.Context, c *console.Console, tokens []string) bool {
+			noxflags.SetGame(noxflags.GameFlag28)
+			ok := saveCoopGame(common.SaveTmp)
+			noxflags.UnsetGame(noxflags.GameFlag28)
+			c.Printf(console.ColorLightYellow, "coopsave: %v", ok)
+			return true
+		},
+	})
 	noxCmdSetMaps.Register(&console.Command{
 		Token: "allow.all",
 		Help:  "ignore all map mode checks when using load command",
