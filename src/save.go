@@ -680,9 +680,45 @@ func (s *Server) coopApplyProfile(pl *server.Player) {
 	serverSetAllSpells(pl, false, 0)
 	serverSetAllWarriorAbilities(pl, false, 0)
 	legacy.Nox_xxx_playerMakeDefItems_4EF7D0(pl.PlayerUnit, 1, 0)
+	s.coopStripStarterExtras(pl)
 	s.coopSyncClearedKit(pl)
 	if pl.PlayerClass() == player.Warrior {
 		legacy.Nox_xxx_abilGivePlayerAll_4EED40(pl.PlayerUnit, int(pl.Level), 0)
+	}
+}
+
+// coopStripStarterExtras removes equipped items left over from kits granted
+// before the coop mode flag was set (e.g. the multiplayer lobby default), which
+// the item reset keeps because it never deletes equipped gear. What remains is
+// the campaign starting kit: street clothes plus the class starter weapon.
+func (s *Server) coopStripStarterExtras(pl *server.Player) {
+	u := pl.PlayerUnit
+	if u == nil {
+		return
+	}
+	keep := map[string]bool{
+		"StreetShirt":    true,
+		"StreetPants":    true,
+		"StreetSneakers": true,
+	}
+	switch pl.PlayerClass() {
+	case player.Warrior:
+		keep["Sword"] = true
+	default:
+		keep["StaffWooden"] = true
+	}
+	var del []*server.Object
+	for it := u.InvFirstItem; it != nil; it = it.InvNextItem {
+		if !it.Flags().Has(object.FlagEquipped) {
+			continue
+		}
+		if typ := s.Types.ByInd(int(it.TypeInd)); typ != nil && keep[typ.ID()] {
+			continue
+		}
+		del = append(del, it)
+	}
+	for _, it := range del {
+		s.DelayedDelete(it)
 	}
 }
 
@@ -851,7 +887,15 @@ func saveCoopGame(name string) bool {
 	if online {
 		compress = 1 // clients receive the saved map as an .nxz
 	}
-	if !legacy.Nox_xxx_mapSaveMap_51E010(path, compress) {
+	// The ObjectTOC writer rebuilds the type code table with fresh codes for
+	// the saved file. Keep the running map's numbering so a subsequent client
+	// map read on the host still resolves type codes correctly.
+	toc := objectTypeCode16ByInd
+	tocLen := objectTypeCode16ByInd_len
+	ok := legacy.Nox_xxx_mapSaveMap_51E010(path, compress)
+	objectTypeCode16ByInd = toc
+	objectTypeCode16ByInd_len = tocLen
+	if !ok {
 		return false
 	}
 	legacy.Nox_xxx_monstersAllBelongToHost_4DB6A0()
